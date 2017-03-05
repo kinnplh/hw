@@ -85,7 +85,7 @@ classdef Area < handle
                 end
                     
                 if isNewEvent
-                    newEvent = TouchEvent();
+                    newEvent = TouchEvent(touchEventVector.size() + 1);
                     newEvent.addAreaID(newAreaIds(newAreaIndex), areaVector);
                     touchEventVector.push_back(newEvent);
                     crtNewArea.touchEventID = touchEventVector.size();

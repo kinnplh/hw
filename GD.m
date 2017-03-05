@@ -54,7 +54,7 @@ classdef GD < handle
                     end
                 else
                     %新建一个touchEvent
-                    crtEvent = TouchEvent();
+                    crtEvent = TouchEvent(obj.evts.size() + 1);
                     obj.evts.push_back(crtEvent)
                     assert(obj.evts.size() == crtArea.touchEventID);
                     
