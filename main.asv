@@ -81,6 +81,7 @@ FN = 0;
 
 for i=1:truelist.size()
     evt = truelist.at(i);
+    evt.state = TouchEvent.True;
     
     %有报点的event本身的label是：
     checkarea = evt.areas.at(firstReportedAreaID);
@@ -91,7 +92,7 @@ for i=1:truelist.size()
     %checklabel是九分类 需要转换为二分类
     if(checklabel == TOUCHEDGE || checklabel == TOUCHMID || checklabel == TOUCHNEAR || checklabel == SWIPEMID || checklabel == SWIPEEDGE)
         TP = TP + 1;
-    else% GRIPBIG MOVEBIG GRIPFINGER QUARTERGRIP 
+    else% GRIPBIG QUARTER
         FP = FP + 1;
     end
     
@@ -103,6 +104,8 @@ for i=1:truelist.size()
     trueoutput = [trueoutput;truerecord];
 end
 
+%output里都是报为正例P的 可以根据checklabel来区分TP 和 FP
+%而对于判断出是False的 应该push入falselist中 再根据checklabel来区分 TN 和 FN
 for i=1:falselist.size()
     evt = falselist.at(i);
     evt.state = TouchEvent.False;
@@ -116,7 +119,7 @@ for i=1:falselist.size()
     %checklabel是九分类 需要转换为二分类
     if(checklabel == TOUCHEDGE || checklabel == TOUCHMID || checklabel == TOUCHNEAR || checklabel == SWIPEMID || checklabel == SWIPEEDGE)
         TN = TN + 1;
-    else% GRIPBIG MOVEBIG GRIPFINGER QUARTERGRIP 
+    else
         FN = FN + 1;
     end
    
@@ -130,8 +133,8 @@ end
 %trueoutput
 %falseoutput
 [TP,FP,TN,FN]
-eventsum = TP+FP+TN+FN
-accuracy = TP/(TP+TN)
-callback = FN/(FN+FP)
-F1score = 2 / (1 / accuracy + 1 / callback)
+TP+FP+TN+FN
+accuracy
+callback
+F1socre
 %toc

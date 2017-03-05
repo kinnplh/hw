@@ -3,6 +3,7 @@ classdef Area < handle
        weightedCenter; %重心 Pos
        areaSize;% 面积
        average;% 电容数据平均值
+       capacitysum;%电容数据加和值
        rangeInfo;% 2 * size，每列对应区域中每一个格子，第一行为x坐标，第二行为y坐标
        xSpan;% 在x方向上的跨度
        ySpan;% 在y方向上的跨度
@@ -10,7 +11,7 @@ classdef Area < handle
        RD;% Area包围盒右下角坐标 Pos
        ID;% 自己的编号
        frameID;% 所属的Frame编号
-       reportID;% 报点的坐标 如果没有报点的话是-1
+       reportID;% 报点的touch坐标 如果没有报点的话是-1
        
        touchEventID;% 所属的touchEvent编号
        nextID;% 上一个Area编号
@@ -134,6 +135,7 @@ classdef Area < handle
             end
             
             obj.weightedCenter = Pos(crtWeightX / obj.average, crtWeightY / obj.average); 
+            obj.capacitysum = obj.average;
             obj.average = obj.average / obj.areaSize;
             
             % 判断这个区域是否报点

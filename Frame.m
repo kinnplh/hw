@@ -7,9 +7,9 @@ classdef Frame < handle
        touchIDs;% 每个元素是在该Frame上的touchId
        touchPosPixel;% 每个元素类型是Pos的Vector，记录点击位置的像素坐标值，应该与touchID相对应
        touchPosBlock;% 记录每个报点位置落在哪个电容格子里
-       areaIDs;% 是一个1维向量，每个元素都是在该Frame上的Area的序号
-       
        labels;% 对于每个touchId的标记
+       
+       areaIDs;% 是一个1维向量，每个元素都是在该Frame上的Area的序号
        isValid;% 判断数据是否合法
     end
        
@@ -36,9 +36,10 @@ classdef Frame < handle
             reportedID  = varargin{4};
             pixelX  = varargin{5};
             pixelY  = varargin{6};
-            label  = varargin{7};
-            cap  = varargin{8};
-            id = varargin{9};
+            isPositive = varargin{7};
+            label  = varargin{8};
+            cap  = varargin{9};
+            id = varargin{10};
             
             obj.ID = id;
             capacityRawData = cell2mat(cap);
@@ -78,6 +79,7 @@ classdef Frame < handle
             end
             obj.touchPosBlock.push_back(Pos(blockX, blockY));            
         end
+        
         function merge(obj, f)
             % 将f和本帧合并在一起
             % 要求obj和f的时间是一样的，只是对应于不同的touchId
@@ -90,6 +92,7 @@ classdef Frame < handle
             obj.touchPosBlock.merge(f.touchPosBlock);
             obj.labels.merge(f.labels);
         end
+        
         function ret = flooding(obj, areaVector, frameVector)
             % 对该帧进行洪泛
             % 确定并生成本帧上所有的Area实例，并且添加到一个全局的Area列表（areaVector）中
@@ -156,13 +159,14 @@ classdef Frame < handle
             
             obj.areaIDs = ret;
         end %function flooding
+        
         function res = isInArea(obj, p) % 后续根据实际的要求修改
             if obj.capacity(p.x, p.y) >= Consts.AREA_CAPACITY_THRESHOLD 
                 res = true;
             else
                 res = false;
             end
-        end
+        end  
         
         function ret = copyFrame(obj)
             ret = Frame();
