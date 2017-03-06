@@ -58,17 +58,31 @@
 % 第二阶段处理结束，生成的是经过洪泛的帧的序列，所有的area和所有的touchEvent，并通过“指针”的形式相连
 %**************************************************************************
 
-%第三阶段可以进行测试，也可以根据TouchEvent进行调试
+%第三阶段维护globalData，并将数据按帧喂给OnFrameReceived进行判断
+%modified by Violynne
+
 %tic
 globalData = GD(frameVector, touchEventVector, areaVector);
 
+global truelist;
+global falselist;
+
 truelist = Vector('TouchEvent');
 falselist = Vector('TouchEvent');
+%有一种特殊情况，down帧就是该event的最后一帧，而如果在down帧判定出来是Uncertain，evt就会保持这个状态
+%针对这种特殊情况，应该将之统一赋为False
 
 while globalData.hasNextFrame()
     crtFrame = globalData.getNextFrame();
     OnFrameReceived(globalData,crtFrame);
 end
+
+
+%第三阶段处理结束，得到truelist和falselist
+%**************************************************************************
+
+%第四阶段对得到的分类结果进行测试
+%modified by Violynne
 
 truerecord = [];
 trueoutput = [];
@@ -79,17 +93,18 @@ FP = 0;
 TN = 0;
 FN = 0;
 
+
 for i=1:truelist.size()
     evt = truelist.at(i);
     
     %有报点的event本身的label是：
-    checkarea = evt.areas.at(firstReportedAreaID);
-    checkframe = evt.frames.at(evt.areas.at(firstReportedAreaID).frameID);
-    checkindex = find(touchIDs==checkarea.reportedID);
+    checkarea = globalData.areas.at(evt.firstReportedAreaID);
+    checkframe = globalData.frames.at(globalData.areas.at(evt.firstReportedAreaID).frameID);
+    checkindex = find(checkframe.touchIDs==checkarea.reportID);
     checklabel = checkframe.labels.at(checkindex);
    
     %checklabel是九分类 需要转换为二分类
-    if(checklabel == TOUCHEDGE || checklabel == TOUCHMID || checklabel == TOUCHNEAR || checklabel == SWIPEMID || checklabel == SWIPEEDGE)
+    if(isequal(checklabel{1},TOUCHEDGE)||isequal(checklabel{1},TOUCHNEAR)||isequal(checklabel{1},TOUCHMID)||isequal(checklabel{1},SWIPEMID)||isequal(checklabel{1},SWIPEEDGE))
         TP = TP + 1;
     else% GRIPBIG MOVEBIG GRIPFINGER QUARTERGRIP 
         FP = FP + 1;
@@ -108,13 +123,13 @@ for i=1:falselist.size()
     evt.state = TouchEvent.False;
     
     %有报点的event本身的label是：
-    checkarea = evt.areas.at(firstReportedAreaID);
-    checkframe = evt.frames.at(evt.areas.at(firstReportedAreaID).frameID);
-    checkindex = find(touchIDs==checkarea.reportedID);
+    checkarea = globalData.areas.at(evt.firstReportedAreaID);
+    checkframe = globalData.frames.at(globalData.areas.at(evt.firstReportedAreaID).frameID);
+    checkindex = find(checkframe.touchIDs==checkarea.reportID);
     checklabel = checkframe.labels.at(checkindex);
     
     %checklabel是九分类 需要转换为二分类
-    if(checklabel == TOUCHEDGE || checklabel == TOUCHMID || checklabel == TOUCHNEAR || checklabel == SWIPEMID || checklabel == SWIPEEDGE)
+    if(isequal(checklabel{1},TOUCHEDGE)||isequal(checklabel{1},TOUCHNEAR)||isequal(checklabel{1},TOUCHMID)||isequal(checklabel{1},SWIPEMID)||isequal(checklabel{1},SWIPEEDGE))
         TN = TN + 1;
     else% GRIPBIG MOVEBIG GRIPFINGER QUARTERGRIP 
         FN = FN + 1;
@@ -127,11 +142,15 @@ for i=1:falselist.size()
     falserecord = [evt.ID,evt.state,checklabel,timedelay];
     falseoutput = [falseoutput;falserecord];
 end
+
 %trueoutput
 %falseoutput
+
 [TP,FP,TN,FN]
 eventsum = TP+FP+TN+FN
 accuracy = TP/(TP+TN)
 callback = FN/(FN+FP)
 F1score = 2 / (1 / accuracy + 1 / callback)
 %toc
+
+%第四阶段处理结束，得到评定值和trueoutput falseoutput可用于后期分析

@@ -122,20 +122,20 @@ classdef Area < handle
             
             obj.weightedCenter = Pos(0, 0);
             obj.average = 0;
+            obj.capacitysum = 0;
             crtWeightX = 0;
             crtWeightY = 0;
             theFrame = frameVector.at(obj.frameID);
             for i = 1: obj.areaSize
                 crtCapValue = theFrame.capacity(obj.rangeInfo(1, i), obj.rangeInfo(2, i));
                 obj.average = obj.average + crtCapValue;
+                obj.capacitysum = obj.capacitysum + crtCapValue;
                 crtWeightX = obj.rangeInfo(1, i) * crtCapValue + crtWeightX;
                 crtWeightY = obj.rangeInfo(2, i) * crtCapValue + crtWeightY;
 %                 obj.weightedCenter = obj.weightedCenter.add(...
 %                     Pos(obj.rangeInfo(1, i), obj.rangeInfo(2, i)).mul(crtCapValue));
             end
-            
             obj.weightedCenter = Pos(crtWeightX / obj.average, crtWeightY / obj.average); 
-            obj.capacitysum = obj.average;
             obj.average = obj.average / obj.areaSize;
             
             % 判断这个区域是否报点
@@ -163,6 +163,7 @@ classdef Area < handle
             ret.weightedCenter = obj.weightedCenter;
             ret.areaSize = obj.areaSize;
             ret.average = obj.average;
+            ret.capacitysum = obj.capacitysum;
             ret.rangeInfo = obj.rangeInfo;
             ret.xSpan = obj.xSpan;
             ret.ySpan = obj.ySpan;

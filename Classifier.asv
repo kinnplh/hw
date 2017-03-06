@@ -10,7 +10,7 @@ classdef Classifier
     function ret = IsValidShape(area, ei, term)
         ret = 0;
         if(strcmp(term,'fromedge'))
-            ret = area.size <= 25 && area.xSpan/area.ySpan>=0.5;
+            ret = area.areaSize <= 25 && area.xSpan/area.ySpan>=0.5;
         elseif(strcmp(term, 'onedge'))
             if(area.xSpan == 0 || area.ySpan == 0)
                 ret = 0;
@@ -26,23 +26,27 @@ classdef Classifier
         end
     end
         
-        function ClassifyEmerge(evt)
+        function ret = ClassifyEmerge(globalData,evt)
             
             Uncertain = 0;
             True = 1;
-            False = 2;  
+            False = 2;
+            
+            areas = globalData.areas;
+            evts = globalData.evts;
+            frames = globalData.frames;
+            
             %亮斑出现的初始帧及其边缘信息
-            birthArea = areas.at(evt.areaIDs.first());
-            Bei = EdgeInfo.FromArea(birthArea);
+            birthArea = areas.at(evt.areaIDs(1));
+            Bei = EdgeInfo.FromArea(frames,birthArea);
             %系统报down帧及其边缘信息
             downArea = areas.at(evt.firstReportedAreaID);
-            Dei = EdgeInfo.FromArea(downArea);
+            Dei = EdgeInfo.FromArea(frames,downArea);
             %从亮斑出现的初始帧到系统报down帧经历的毫秒数
             timelength = frames.at(downArea.frameID).time - frames.at(birthArea.frameID).time;
             
             if(Bei.onedge)%亮斑出现于边缘上
-                switch(Bei.edge)
-                    case top,bottom%亮斑出现于上下边缘
+                if((Bei.edge == 3) || (Bei.edge == 4))%亮斑出现于上下边缘
                        if(Classifier.IsValidShape(downArea,Dei,'onedge'))%报点时连通域是边缘上的有效形状
                            %TOUCHEDGE & SWIPEEDGE 边缘点击 & 边缘滑动
                            ret = True;
@@ -51,7 +55,7 @@ classdef Classifier
                            ret = False;
                        end
                        
-                    case left,right%亮斑出现于左右边缘
+                elseif((Bei.edge == 1) || (Bei.edge == 2)) %亮斑出现于左右边缘
                        if(~Bei.fromedge)%亮斑不是从边缘生长起来的
                            if(Classifier.IsValidShape(birthArea,Bei,'fromedge'))%报点时连通域是边缘上的有效形状
                                %TOUCHNEAR & SWIPENEAR 接近边缘的点击 & 滑动
@@ -79,35 +83,37 @@ classdef Classifier
                            end
                        end
                        
-                    %case lt,ld,rt,rd
+                    % lt,ld,rt,rd
                         %亮斑出现在四个边角
                         
-                    case mid%亮斑出现不在边缘
+                else%亮斑出现不在边缘
                        if(~Classifier.IsValidShape(downArea,Dei,'middle'))
                            %MOVEBIG & STRANGE 不与边缘相连的连带大鱼际 & 不与边缘相连的其他异形
                            ret = False;
                        else
                            %TOUCHMID & SWIPEEDGE 远离屏幕的点击 & 滑动
+                           sprintf('why not here???')
                            ret = True;
                        end
                 end
             end
-            
-            %if(ret == Uncertain)
-                %进入ClassifyEmerge
-                %进入ClassifyDisappear
-                %进入IsSwipe
-            %elseif(ret == True)
-                %进入GlobalChange
-            %else(ret == False)
-                %对处于同一个event的之后所有报点置为False
-            
+          
         end
         
-        function ClassifyDisappear(evt)
+        function ret = ClassifyDisappear(globalData,evt,crtFrame)
+           Uncertain = 0;
+           True = 1;
+           False = 2;
+           areas = globalData.areas;
+           evts = globalData.evts;
+           frames = globalData.frames;
+           
+           downArea = areas.at(evt.firstReportedAreaID);
+           Dei = EdgeInfo.FromArea(frames,downArea);
+           
            find = 0;
            for i = 1: length(crtFrame.areaIDs)
-               checkArea = obj.areaVector.at(crtFrame.areaIDs(i));
+               checkArea = areas.at(crtFrame.areaIDs(i));
                if(checkArea.touchEventID == evt.ID)
                    curArea = checkArea;
                    find = 1;
@@ -118,8 +124,9 @@ classdef Classifier
                ret = False;%实际上还是Uncertain
            else
                %获取当前帧的当前考虑的event的当前area
-               timedis = frameVector.at(curArea.frameID).time - frameVector.at(downArea.frameID).time;
-               capacitydis = abs(curArea.capacitysum - downArea.capacitysum);
+               timedis = frames.at(curArea.frameID).time - frames.at(downArea.frameID).time;
+%              capacitydis = abs(curArea.capacitysum - downArea.capacitysum);
+               capacitydis = abs(curArea.average * curArea.areaSize - downArea.average * downArea.areaSize);
                disappearRatio =  (capacitydis+1)/(timedis+1);
 
                if(timedis >= 30 && disappearRatio > 50)
@@ -127,11 +134,11 @@ classdef Classifier
                else
                    ret = False;%实际上还是Uncertain
                end
+               ret = Uncertain;
            end
            
         end
-        
-        
+     
 %         function GlobalChange()
 %             
 %         end

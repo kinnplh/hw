@@ -1,23 +1,43 @@
 function OnFrameReceived(globalData,crtFrame)
 % 此处显示有关此函数的摘要
 
+
+    truelist = Vector('TouchEvent');
+    falselist = Vector('TouchEvent');
+    
+if(length(crtFrame.areaIDs)==0)
+    sprintf('Error:No area in the crtFrame')
+else
+    
 %crtFrame中不是所有的area都有报点，对于有reportedID的area，才观察它所在的touchevent
-for i = 1:crtFrame.areaIDs.size()
-    areaIndex = crtFrame.areaIDs.at(i);
+for i = 1:length(crtFrame.areaIDs)
+    
+    areaIndex = crtFrame.areaIDs(i);
     checkarea = globalData.areas.at(areaIndex);
+    %有可能有的area没有touchEventID
+    
+    if(checkarea.touchEventID == -1)
+        sprintf('Error:No touchEventID in the area')
+    end
+    
     evt = globalData.evts.at(checkarea.touchEventID);
     
     % 处理每个报点的情况，利用触点形成的特征
     % 能进入ClassifyEmerge判断：当前帧是当前观察的event的系统报down的那一帧
     
-    if((evt.state == TouchEvent.Uncertain) && (checkarea.ID == evt.firstReportedAreaID))
-        predictEmerge = Classifier.ClassifyEmerge(evt);
+    if((evt.state == TouchEvent.Undefined) && (checkarea.ID == evt.firstReportedAreaID))
+        if(evt.ID == 1402)
+            sprintf('1402')
+        end
+        evt
+        Classifier.ClassifyEmerge(globalData,evt)
+        predictEmerge = Classifier.ClassifyEmerge(globalData,evt);
         if(predictEmerge == TouchEvent.True)
-            truelist.add(evt);
+            truelist.push_back(evt);
             evt.state = TouchEvent.True;
             %对于已经判定为true的，不再会进入判断
         elseif(predictEmerge == TouchEvent.False)
-            falselist.add(evt);
+            falselist.push_back(evt);
             evt.state = TouchEvent.False;
         else % predictEmerge == TouchEvent.Uncertain
             evt.state = TouchEvent.Uncertain;
@@ -27,20 +47,20 @@ for i = 1:crtFrame.areaIDs.size()
     % 处理每个报点的情况，利用触点消失的特征
     % 能进入ClassifyDisappear判断：当前帧是当前观察的event的系统报down之后的帧，且在报down时的结果是Uncertain，而且这个结果只能在down之后30ms计算
     
-    if((evt.state == TouchEvent.Uncertain)  && (crtFrame.time - frames.at(areas.at(evt.firstReportedAreaID).frameID).time > 30))
-        predictDisappear =
-        if(Classifier.ClassifyDisappear(evt,crtFrame) == TouchEvent.True)
-            truelist.add(evt);
+    if((evt.state == TouchEvent.Uncertain)  && (crtFrame.time - globalData.frames.at(globalData.areas.at(evt.firstReportedAreaID).frameID).time > 30))
+        predictDisappear = Classifier.ClassifyDisappear(globalData,evt,crtFrame);
+        if(predictDisappear == TouchEvent.True)
+            truelist.push_back(evt);
             evt.state = TouchEvent.True;
-        elseif(Classifier.ClassifyDisappear(evt,crtFrame) == TouchEvent.False)
-            falselist.add(evt);
+        elseif(predictDisappear == TouchEvent.False)
+            falselist.push_back(evt);
             evt.state = TouchEvent.False;
         end
     end
     
     
 end
-
+end
 % 根据疑似报点的情况，执行全局特征判断
 % if (list.count>0)
 %     if(Classifier.GlobalChange())

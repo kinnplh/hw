@@ -9,8 +9,9 @@ classdef TouchEvent < handle
       areaIDs;% 是一个1维向量， 每个元素依次是构成该touchEvent的Area的序号
       firstReportedAreaID;
       state;
+      
+      % add by Violynne
       ID; %touchevent本身的ID,等于其中包含的Area归属回来的touchEventID
-      %
    end
    
    methods
