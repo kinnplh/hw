@@ -120,7 +120,9 @@ classdef Frame < handle
 
                 obj.areaInfo = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM) - 1;
                 ret = [];
-                                
+                
+                areaVector = Vector('Area');
+                
                 for ii = 1:length(localmax(:,1)),
                     % (x, y) 应该是这个Area洪泛的起点
                     x = localmax(ii,1);
@@ -154,8 +156,8 @@ classdef Frame < handle
                                     temPos = Pos(crtPos.x, crtPos.y + 1);
                             end
                             
-                            if temPos.x <= 0 || temPos.y <= 0 ||...
-                                    temPos.x > Consts.CAPACITY_BLOCK_X_NUM || temPos.y > Consts.CAPACITY_BLOCK_Y_NUM...
+                            if temPos.x <= 0 || temPos.y <= 0 ||
+                                    temPos.x > Consts.CAPACITY_BLOCK_X_NUM || temPos.y > Consts.CAPACITY_BLOCK_Y_NUM…
                                     || obj.areaInfo(temPos.x, temPos.y) ~= -1
                                 continue;
                             end
@@ -174,7 +176,6 @@ classdef Frame < handle
             end
             obj.areaIDs = ret;
         end
-        
         
         function res = IsConnected(obj, p, illum0, maxillum) %????????????????
             % res = obj.rawData.capacityData(p.x, p.y) > min(obj.threshold, illum/6); 

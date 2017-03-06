@@ -1,4 +1,5 @@
 classdef Consts
+    
 	properties(Constant)
 		DEVICE_WIDTH_PIXEL = 1080;
 		DEVICE_HEIGHT_PIXEL = 1920;
@@ -9,5 +10,11 @@ classdef Consts
 		BLOCK_HEIGHT = floor(Consts.DEVICE_HEIGHT_PIXEL / Consts.CAPACITY_BLOCK_Y_NUM);
         AREA_CAPACITY_THRESHOLD = 50;
         CONNECTED_AREA_LARGEST_TIME_OFFSET = 20;
+        
+        SLIDE = 1;
+        CLICK = 2;
+        UNKNOWN = 3;
+        
+        FRAME_STROE_SIZE = 3;
 	end
 end

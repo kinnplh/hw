@@ -10,40 +10,70 @@ classdef Area < handle
        RD;% Area包围盒右下角坐标 Pos
        ID;% 自己的编号
        frameID;% 所属的Frame编号
-       reportID;% 报点的坐标 如果没有报点的话是-1
+       reportID;% 报点的编号 如果没有报点的话是-1
        
        touchEventID;% 所属的touchEvent编号
        nextID;% 上一个Area编号
        previousID;% 下一个Area编号
     end
     methods(Static)
-        function ret = isConnected(area1, area2, frameVector)
+        function ret = isConnected(area1, area2, frameVector, touchEventVector)
+            %?增加单调性的判断
+            
+            %时间差过大，不予考虑
             if abs(frameVector.at(area1.frameID).time - frameVector.at(area2.frameID).time)...
                     > Consts.CONNECTED_AREA_LARGEST_TIME_OFFSET
                 ret = false;
                 return;
             end
             
-            if area1.reportID ~= area2.reportID && area1.reportID ~= -1 && area2.reportID ~= -1
+            %如果两Area的TouchID都不是-1的话，通过TouchID来进行判断
+            if area1.reportID ~= -1 && area2.reportedID ~= -1
+                if area1.reportID == area2.reportedID
+                    ret = true;
+                    return;
+                else
+                    ret = false;
+                    return;
+                end
+                
+            end
+            
+            if frameVector.at(area1.frameID).time > frameVector.at(area2.frameID).time
+                oldArea = area2;
+                youngArea = area1;
+            elseif frameVector.at(area1.frameID).time < frameVector.at(area2.frameID).time
+                oldArea = area1;
+                youngArea = area2;
+            else % 时间相同，说明在同一帧中
                 ret = false;
                 return;
             end
             
             
-            if area1.reportID ~= -1 && area2.reportID ~= -1 
-                ret = true;
-                return;
-            end
-            
             % 判断两个均未报点的area，或者一个报点一个没报点（内部插帧的情况）是否构成相互连接的关系
-            % 要求体积较小的area的重心落在体积较大的area内部
-            
-            
+
             area1WCRounded = area1.weightedCenter.round();
             area2WCRounded = area2.weightedCenter.round();
             if sum(ismember(area1.rangeInfo', [area2WCRounded.x, area2WCRounded.y], 'rows')) > 0 && ...
                     sum(ismember(area2.rangeInfo', [area1WCRounded.x, area1WCRounded.y], 'rows')) > 0
-                ret = true;
+                lastEvent = touchEventVector.at(oldArea.touchEventID);
+                if lastEvent.firstReportedAreaID ~= -1 && lastEvent.lastReportedAreaID == -1 % 在down和up之间
+                    ret = true;
+                elseif lastEvent.firstReportedAreaID == -1 % 在down之前  要求后续的area不能够过小
+                    if youngArea.areaSize * youngArea.average >= oldArea.areaSize * lodArea.average / 1.1
+                        ret = true;
+                    else
+                        ret = false;
+                    end
+                else% 在up之后，要求后续的area不能变大
+                    if youngArea.areaSize * youngArea.average <= oldArea.areaSize * lodArea.average * 1.1
+                        ret = true;
+                    else
+                        ret = false;
+                    end
+                    
+                end
             else
                 ret = false;
             end
@@ -142,7 +172,7 @@ classdef Area < handle
             
             frameTouchPointSize = theFrame.touchPosBlock.size();
             obj.reportID = -1;
-            for i = 1: frameTouchPointSize
+            for i = 1: frameTouchPointSize %对于没有报点的来说，frameTouchPointSize == -1
                 crtPos = theFrame.touchPosBlock.at(i);
                 if sum(ismember(obj.rangeInfo', [crtPos.x, crtPos.y], 'rows')) > 0
                     if obj.reportID ~= -1

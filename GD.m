@@ -5,6 +5,7 @@ classdef GD < handle
         evts;
         frames;
         areas;
+        testResults;
     end
     
     properties (Access = 'private')
@@ -12,7 +13,7 @@ classdef GD < handle
         frameVector;
         touchEventVector;
         areaVector;
-        
+
         crtFrameIndex;
     end
     
@@ -25,6 +26,7 @@ classdef GD < handle
             obj.evts = Vector('TouchEvent');
             obj.frames = Vector('Frame');
             obj.areas = Vector('Area');
+            obj.testResults = Vector('TestResult');
         end
         function ret = hasNextFrame(obj)
             ret = obj.crtFrameIndex < obj.frameVector.size();
@@ -51,12 +53,19 @@ classdef GD < handle
                     crtEvent.areaIDs = [crtEvent.areaIDs, crtArea.ID];
                     if crtEvent.firstReportedAreaID == -1 && crtArea.reportID ~= -1
                         crtEvent.firstReportedAreaID = crtArea.ID;
+                        crtEvent.reportID = crtArea.reportID;
+                    end
+                    if crtEvent.firstReportedAreaID ~= -1 && crtEvent.reportID > 0 && crtArea.reportID == -1
+                        crtEvent.lastReportedAreaID = crtArea.ID;
                     end
                 else
                     %新建一个touchEvent
                     crtEvent = TouchEvent(obj.evts.size() + 1);
+                    crtTestResult = TestResult(crtEvent.ID);
                     obj.evts.push_back(crtEvent)
+                    obj.testResults.push_back(crtTestResult);
                     assert(obj.evts.size() == crtArea.touchEventID);
+                    assert(crtTestResult.touchEventID == obj.testResults.size());
                     
                     crtEvent.areaIDs = crtArea.ID;
                     if crtArea.reportID ~= -1

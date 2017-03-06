@@ -55,12 +55,12 @@ for fileId = 1: length(mainPaths)
     %**************************************************************************
 
     %第三阶段可以进行测试，也可以根据TouchEvent进行调试
-    % tic
-    % globalData = GD(frameVector, touchEventVector, areaVector);
-    % while globalData.hasNextFrame()
-    %     crtFrame = globalData.getNextFrame();
-    %     % OnFrameReceived(crtFrame);
-    % end
-    % toc
+    tic
+    globalData = GD(frameVector, touchEventVector, areaVector);
+    while globalData.hasNextFrame()
+        crtFrame = globalData.getNextFrame();
+        % OnFrameReceived(crtFrame);
+    end
+    toc
     
 end
