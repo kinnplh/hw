@@ -5,6 +5,7 @@ classdef GD < handle
         evts;
         frames;
         areas;
+        
     end
     
     properties (Access = 'private')
@@ -12,7 +13,7 @@ classdef GD < handle
         frameVector;
         touchEventVector;
         areaVector;
-        
+
         crtFrameIndex;
     end
     
@@ -25,13 +26,14 @@ classdef GD < handle
             obj.evts = Vector('TouchEvent');
             obj.frames = Vector('Frame');
             obj.areas = Vector('Area');
+            
         end
         function ret = hasNextFrame(obj)
             ret = obj.crtFrameIndex < obj.frameVector.size();
         end
-        
         function ret = getNextFrame(obj)
             obj.crtFrameIndex = obj.crtFrameIndex + 1;
+            
             % 从上帝视角中拷贝相应的frame，并push到frames中去
             % frame本身的信息没有什么需要改动的
             crtFrame = obj.frameVector.at(obj.crtFrameIndex).copyFrame();
@@ -51,13 +53,16 @@ classdef GD < handle
                     crtEvent.areaIDs = [crtEvent.areaIDs, crtArea.ID];
                     if crtEvent.firstReportedAreaID == -1 && crtArea.reportID ~= -1
                         crtEvent.firstReportedAreaID = crtArea.ID;
+                        crtEvent.reportID = crtArea.reportID;
+                    end
+                    if crtEvent.firstReportedAreaID ~= -1 && crtEvent.reportID > 0 && crtArea.reportID == -1
+                        crtEvent.lastReportedAreaID = crtArea.ID;
                     end
                 else
                     %新建一个touchEvent
-                    crtEvent = TouchEvent(crtArea.touchEventID);
-                    obj.evts.push_back(crtEvent)
+                    crtEvent = TouchEvent(obj.evts.size() + 1);
+                    obj.evts.push_back(crtEvent);
                     assert(obj.evts.size() == crtArea.touchEventID);
-                    
                     crtEvent.areaIDs = crtArea.ID;
                     if crtArea.reportID ~= -1
                         crtEvent.firstReportedAreaID = crtArea.ID;

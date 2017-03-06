@@ -1,11 +1,7 @@
 function OnFrameReceived(globalData,crtFrame)
 % 此处显示有关此函数的摘要
-
-
-    global truelist;
-    global falselist;
     
-if(length(crtFrame.areaIDs)==0)
+if(isempty(crtFrame.areaIDs))
     sprintf('Error:No area in the crtFrame')
 else
     
@@ -28,11 +24,9 @@ for i = 1:length(crtFrame.areaIDs)
     if((evt.state == TouchEvent.Undefined) && (checkarea.ID == evt.firstReportedAreaID))
         predictEmerge = Classifier.ClassifyEmerge(globalData,evt);
         if(predictEmerge == TouchEvent.True)
-            truelist.push_back(evt);
             evt.state = TouchEvent.True;
             %对于已经判定为true的，不再会进入判断
         elseif(predictEmerge == TouchEvent.False)
-            falselist.push_back(evt);
             evt.state = TouchEvent.False;
         else % predictEmerge == TouchEvent.Uncertain
             evt.state = TouchEvent.Uncertain;
@@ -45,10 +39,8 @@ for i = 1:length(crtFrame.areaIDs)
     if((evt.state == TouchEvent.Uncertain)  && (crtFrame.time - globalData.frames.at(globalData.areas.at(evt.firstReportedAreaID).frameID).time > 30))
         predictDisappear = Classifier.ClassifyDisappear(globalData,evt,crtFrame);
         if(predictDisappear == TouchEvent.True)
-            truelist.push_back(evt);
             evt.state = TouchEvent.True;
         elseif(predictDisappear == TouchEvent.False)
-            falselist.push_back(evt);
             evt.state = TouchEvent.False;
         end
     end

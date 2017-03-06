@@ -7,9 +7,9 @@ classdef Frame < handle
        touchIDs;% 每个元素是在该Frame上的touchId
        touchPosPixel;% 每个元素类型是Pos的Vector，记录点击位置的像素坐标值，应该与touchID相对应
        touchPosBlock;% 记录每个报点位置落在哪个电容格子里
-       labels;% 对于每个touchId的标记
-       
        areaIDs;% 是一个1维向量，每个元素都是在该Frame上的Area的序号
+       
+       labels;% 对于每个touchId的标记
        isValid;% 判断数据是否合法
     end
        
@@ -79,7 +79,6 @@ classdef Frame < handle
             end
             obj.touchPosBlock.push_back(Pos(blockX, blockY));            
         end
-        
         function merge(obj, f)
             % 将f和本帧合并在一起
             % 要求obj和f的时间是一样的，只是对应于不同的touchId
@@ -94,6 +93,113 @@ classdef Frame < handle
         end
         
         function ret = flooding(obj, areaVector, frameVector)
+            ret = [];
+            frame = obj;
+            WIDTH = Consts.CAPACITY_BLOCK_X_NUM; 
+            HEIGHT = Consts.CAPACITY_BLOCK_Y_NUM;
+            
+            data = frame.capacity;
+            
+            localmax = [];
+            for x = 1:WIDTH,
+                for y = 1:HEIGHT,
+                    xx = max([x-1,1]):min([WIDTH,x+1]);
+                    yy = max([y-1,1]):min([HEIGHT,y+1]);
+                    d = data(xx,yy);
+                    [m,I] = max(d(:));
+                    if(m(1) == data(x,y) && m(1) >= Consts.AREA_CAPACITY_THRESHOLD)
+                        localmax = [localmax; x y m(1)];
+                    end
+                end
+            end
+            
+            if(isempty(localmax))
+                % non-local-max
+            else
+                % sort the local max
+                [~,I] = sort(localmax(:,3),'descend');
+                localmax = localmax(I,:);
+
+                obj.areaInfo = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM) - 1;
+                ret = [];
+                                
+                for ii = 1:length(localmax(:,1)),
+                    % (x, y) 应该是这个Area洪泛的起点
+                    x = localmax(ii,1);
+                    y = localmax(ii,2);
+                    maxillum = localmax(ii,3);
+                    
+                    if obj.areaInfo(x, y) ~= -1
+                        continue;
+                    end
+                   
+                    obj.areaInfo(x, y) = 1;
+                    
+                    % a new area
+                    areaRangeInfo = [];
+                    posQueue = Queue('Pos');
+                    posQueue.offer(Pos(x, y));
+                    
+                    while ~posQueue.isempty()
+                        crtPos = posQueue.poll();
+                        areaRangeInfo = [areaRangeInfo, [crtPos.x; crtPos.y]];
+                        illum = frame.capacity(crtPos.x, crtPos.y);
+                        for iii = 1: 4
+                            switch(iii)
+                                case 1
+                                    temPos = Pos(crtPos.x - 1, crtPos.y);
+                                case 2
+                                    temPos = Pos(crtPos.x + 1, crtPos.y);
+                                case 3
+                                    temPos = Pos(crtPos.x, crtPos.y - 1);
+                                case 4
+                                    temPos = Pos(crtPos.x, crtPos.y + 1);
+                            end
+                            
+                            if temPos.x <= 0 || temPos.y <= 0 ||...
+                                    temPos.x > Consts.CAPACITY_BLOCK_X_NUM || temPos.y > Consts.CAPACITY_BLOCK_Y_NUM...
+                                    || obj.areaInfo(temPos.x, temPos.y) ~= -1
+                                continue;
+                            end
+                            
+                            if obj.IsConnected(temPos, illum, maxillum)
+                                obj.areaInfo(temPos.x, temPos.y) = 1;
+                                posQueue.offer(temPos);
+                            end
+                        end
+                    end
+                    
+                    area = Area(areaRangeInfo, obj.ID, frameVector, areaVector.size() + 1);
+                    areaVector.push_back(area);
+                    ret = [ret, areaVector.size()];
+                end
+            end
+            obj.areaIDs = ret;
+        end
+        
+        
+        function res = IsConnected(obj, p, illum0, maxillum) %????????????????
+            % res = obj.rawData.capacityData(p.x, p.y) > min(obj.threshold, illum/6); 
+            illum = obj.capacity(p.x, p.y);
+            
+            th = 50;
+            if(maxillum < 250)
+                th = 50;
+            elseif(maxillum<2000)
+                th = maxillum/5;
+            else
+                th = 400;
+            end      
+
+            if(illum > th && illum<=2*illum0)
+            %if(illum > 50 && illum>0.3*illum0 && illum<=2*illum0)
+                res = 1;
+            else
+                res = 0;
+            end
+        end
+        
+        function ret = flooding1(obj, areaVector, frameVector)
             % 对该帧进行洪泛
             % 确定并生成本帧上所有的Area实例，并且添加到一个全局的Area列表（areaVector）中
             % 返回该帧上新出现的Area实例在全局Area列表上编号的起止
@@ -159,14 +265,13 @@ classdef Frame < handle
             
             obj.areaIDs = ret;
         end %function flooding
-        
         function res = isInArea(obj, p) % 后续根据实际的要求修改
             if obj.capacity(p.x, p.y) >= Consts.AREA_CAPACITY_THRESHOLD 
                 res = true;
             else
                 res = false;
             end
-        end  
+        end
         
         function ret = copyFrame(obj)
             ret = Frame();
