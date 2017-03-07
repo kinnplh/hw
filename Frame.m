@@ -292,5 +292,11 @@ classdef Frame < handle
             ret.areaIDs = obj.areaIDs;
             ret.isValid = obj.isValid;
         end
+        
+        function showFrame(obj, whiteNum) 
+            image = obj.capacity / whiteNum;
+            imshow(image','InitialMagnification','fit');
+        end
+        
     end
 end
