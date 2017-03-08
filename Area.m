@@ -28,8 +28,8 @@ classdef Area < handle
             end
             
             %如果两Area的TouchID都不是-1的话，通过TouchID来进行判断
-            if area1.reportID ~= -1 && area2.reportedID ~= -1
-                if area1.reportID == area2.reportedID
+            if area1.reportID ~= -1 && area2.reportID ~= -1
+                if area1.reportID == area2.reportID
                     ret = true;
                     return;
                 else
@@ -61,13 +61,13 @@ classdef Area < handle
                 if lastEvent.firstReportedAreaID ~= -1 && lastEvent.lastReportedAreaID == -1 % 在down和up之间
                     ret = true;
                 elseif lastEvent.firstReportedAreaID == -1 % 在down之前  要求后续的area不能够过小
-                    if youngArea.areaSize * youngArea.average >= oldArea.areaSize * lodArea.average / 1.1
+                    if youngArea.areaSize * youngArea.average >= oldArea.areaSize * oldArea.average / 1.1
                         ret = true;
                     else
                         ret = false;
                     end
                 else% 在up之后，要求后续的area不能变大
-                    if youngArea.areaSize * youngArea.average <= oldArea.areaSize * lodArea.average * 1.1
+                    if youngArea.areaSize * youngArea.average <= oldArea.areaSize * oldArea.average * 1.1
                         ret = true;
                     else
                         ret = false;
@@ -87,7 +87,7 @@ classdef Area < handle
             %   连接2个有承接关系的Area并维护相应的数据结构
             % 返回的是未找到后续的所有的Area，也就是所有的newAreaIds
             % 对于未找到“上家”的newAreas来说都需要新建一个事件
-            % 对于未找到下家的lastAreas可以不作处理
+            % 对于未找到下家的lastAreas可以不作处理？    
             % NAIVE IMPLEMENT
             ret = newAreaIds;
             newNum = length(newAreaIds);
@@ -102,7 +102,7 @@ classdef Area < handle
                     if crtLastArea.nextID ~= -1
                         continue;
                     end
-                    if Area.isConnected(crtNewArea, crtLastArea, frameVector)
+                    if Area.isConnected(crtNewArea, crtLastArea, frameVector, touchEventVector)
                         crtLastArea.nextID = newAreaIds(newAreaIndex);
                         crtNewArea.previousID = lastAreaIds(lastAreaIndex);
                         crtNewArea.touchEventID = crtLastArea.touchEventID;
@@ -122,6 +122,7 @@ classdef Area < handle
                 end
                 
             end
+           
         end 
     end
     
@@ -180,7 +181,7 @@ classdef Area < handle
                     end
                     
                     obj.reportID = theFrame.touchIDs(i);
-                    break;
+                    %break;
                 end
                 
             end

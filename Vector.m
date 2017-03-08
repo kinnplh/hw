@@ -9,7 +9,7 @@ classdef Vector < handle
         end
         
         function clear(obj)
-            obj.elemQueue = Queue(t);
+            obj.elemQueue = obj.elemQueue.clear();
         end
         
         function push_back(obj, newElem)

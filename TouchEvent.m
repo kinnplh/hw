@@ -30,6 +30,16 @@ classdef TouchEvent < handle
            end
            
        end
+       
+       function showVideo(obj, whiteNum, frameVector, areaVector)
+           totalFrame = length(obj.areaIDs);
+           for i = 1: totalFrame
+               crtArea = areaVector.at(obj.areaIDs(i));
+               crtFrame = frameVector.at(crtArea.frameID);
+               crtFrame.showFrame(whiteNum);
+               pause
+           end
+       end
    end
    
    

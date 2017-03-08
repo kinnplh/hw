@@ -10,6 +10,7 @@ classdef Consts
 		BLOCK_HEIGHT = floor(Consts.DEVICE_HEIGHT_PIXEL / Consts.CAPACITY_BLOCK_Y_NUM);
         AREA_CAPACITY_THRESHOLD = 50;
         CONNECTED_AREA_LARGEST_TIME_OFFSET = 20;
+        MAX_UNREPORTED_TIME = 30;
         
         SLIDE = 1;
         CLICK = 2;

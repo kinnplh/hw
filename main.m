@@ -1,5 +1,5 @@
 % 这里大概罗列出单个文件的处理流程
-
+% 被弃用，已经被分为3个文件
 mainPaths = getfilepaths('data/');
 
 
@@ -30,10 +30,11 @@ for fileId = 1: length(mainPaths)
 
     savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);
     save(savePath, 'frameVector');
-
+    toc
     % 第一阶段处理结束，生成的是只有原始数据的帧的序列
     %**************************************************************************
 
+    tic
     lastAreaIds = [];
     areaVector = Vector('Area');
     touchEventVector = Vector('TouchEvent');

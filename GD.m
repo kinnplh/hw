@@ -39,11 +39,14 @@ classdef GD < handle
             crtFrame = obj.frameVector.at(obj.crtFrameIndex).copyFrame();
             obj.frames.push_back(crtFrame);
             assert(obj.frames.size() == crtFrame.ID);
+            assert(obj.frames.at(obj.frames.size()).time == obj.frameVector.at(obj.frames.size()).time);
+            
             % 添加在该frame中的所有area
-            for i = 1: length(crtFrame.areaIDs)
+            for i = 1: length(crtFrame.areaIDs) %对应于所有的新的area  顺序应该是和生成的时候是一样的
                 crtArea = obj.areaVector.at(crtFrame.areaIDs(i)).copyArea();
                 obj.areas.push_back(crtArea);
                 assert(obj.areas.size() == crtArea.ID);
+                
                 crtArea.nextID = -1;
                 if crtArea.previousID ~= -1
                     % 和上一个Area相连接
@@ -64,10 +67,11 @@ classdef GD < handle
                     crtTestResult = TestResult(crtEvent.ID);
                     obj.evts.push_back(crtEvent)
                     obj.testResults.push_back(crtTestResult);
-                    assert(obj.evts.size() == crtArea.touchEventID);
+                    
                     assert(crtTestResult.touchEventID == obj.testResults.size());
                     
                     crtEvent.areaIDs = crtArea.ID;
+                    assert(crtArea.ID == obj.touchEventVector.at(crtTestResult.touchEventID).areaIDs(1));
                     if crtArea.reportID ~= -1
                         crtEvent.firstReportedAreaID = crtArea.ID;
                     else

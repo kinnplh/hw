@@ -1,6 +1,7 @@
 classdef Frame < handle
     properties
        time;
+       filePath;
        ID;
        capacity;% 记录电容数据
        areaInfo;% 表征该帧上的区域信息，16 * 28的矩阵，1表示这个电容格子输入某一个area中间，0表示不在任意一个Area中，-1表示尚未经过洪泛
@@ -39,6 +40,7 @@ classdef Frame < handle
             label  = varargin{7};
             cap  = varargin{8};
             id = varargin{9};
+            obj.filePath = varargin{10};
             
             obj.ID = id;
             capacityRawData = cell2mat(cap);
@@ -90,17 +92,16 @@ classdef Frame < handle
             obj.touchPosBlock.merge(f.touchPosBlock);
             obj.labels.merge(f.labels);
         end
-        
         function ret = flooding(obj, areaVector, frameVector)
             frame = obj;
-            WIDTH = Consts.BLOCK_WIDTH; 
+            WIDTH = Consts.CAPACITY_BLOCK_X_NUM; 
             HEIGHT = Consts.CAPACITY_BLOCK_Y_NUM;
-            
+            ret = [];
             data = frame.capacity;
             
             localmax = [];
-            for x = 1:WIDTH,
-                for y = 1:HEIGHT,
+            for x = 1:WIDTH
+                for y = 1:HEIGHT
                     xx = max([x-1,1]):min([WIDTH,x+1]);
                     yy = max([y-1,1]):min([HEIGHT,y+1]);
                     d = data(xx,yy);
@@ -119,9 +120,9 @@ classdef Frame < handle
                 localmax = localmax(I,:);
 
                 obj.areaInfo = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM) - 1;
-                ret = [];
+                
                                 
-                for ii = 1:length(localmax(:,1)),
+                for ii = 1:length(localmax(:,1))
                     % (x, y) 应该是这个Area洪泛的起点
                     x = localmax(ii,1);
                     y = localmax(ii,2);
@@ -174,8 +175,6 @@ classdef Frame < handle
             end
             obj.areaIDs = ret;
         end
-        
-        
         function res = IsConnected(obj, p, illum0, maxillum) %????????????????
             % res = obj.rawData.capacityData(p.x, p.y) > min(obj.threshold, illum/6); 
             illum = obj.capacity(p.x, p.y);
@@ -196,7 +195,6 @@ classdef Frame < handle
                 res = 0;
             end
         end
-        
         function ret = flooding1(obj, areaVector, frameVector)
             % 对该帧进行洪泛
             % 确定并生成本帧上所有的Area实例，并且添加到一个全局的Area列表（areaVector）中
@@ -270,7 +268,6 @@ classdef Frame < handle
                 res = false;
             end
         end
-        
         function ret = copyFrame(obj)
             ret = Frame();
             ret.time = obj.time;
@@ -281,6 +278,7 @@ classdef Frame < handle
             ret.touchPosPixel = Vector('Pos');
             ret.touchPosBlock = Vector('Pos');
             ret.labels = Vector('cell');
+            ret.filePath = obj.filePath;
             touchPosSize = obj.touchPosPixel.size();
             for i = 1: touchPosSize
                 ret.touchPosPixel.push_back(obj.touchPosPixel.at(i));
@@ -290,5 +288,10 @@ classdef Frame < handle
             ret.areaIDs = obj.areaIDs;
             ret.isValid = obj.isValid;
         end
+        function showFrame(obj, whiteNum) 
+            image = obj.capacity / whiteNum;
+            imshow(image','InitialMagnification','fit');
+        end
+        
     end
 end
