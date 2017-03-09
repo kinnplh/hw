@@ -1,6 +1,7 @@
    
 mainPaths = getfilepaths('data/');
-for fileId = 1: length(mainPaths)
+% for fileId = 1: length(mainPaths)
+for fileId = 1: 1
     tic
     path = mainPaths(fileId)
     savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);   % might be quite slow in fact

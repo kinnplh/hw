@@ -24,9 +24,12 @@ classdef TouchEvent < handle
                obj.reportID = areaVector.at(newID).reportID;
                return;
            end
+           if obj.reportID > -1 &&  areaVector.at(newID).reportID > -1
+               assert(obj.reportID == areaVector.at(newID).reportID);
+           end
            
            if obj.firstReportedAreaID ~= -1 && obj.reportID >= 0 && areaVector.at(newID).reportID < 0
-               obj.lastReportedAreaID = newID;
+               obj.lastReportedAreaID = obj.areaIDs(end - 1);
            end
            
        end

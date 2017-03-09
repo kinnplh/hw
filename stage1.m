@@ -1,6 +1,7 @@
 
 mainPaths = getfilepaths('data/');
-for fileId = 1: length(mainPaths)
+% for fileId = 1: length(mainPaths)
+for fileId = 1: 1
     tic
     frameVector = Vector('Frame');
     path = mainPaths(fileId)
@@ -18,6 +19,11 @@ for fileId = 1: length(mainPaths)
         if ~crtFrame.isValid
             continue;
         end
+        if frameVector.size() == 0
+            frameVector.push_back(crtFrame);
+            continue;
+        end
+        
         % 根据实际情况决定是和frameVector的最后一个元素合并，还是作为新元素加入
         if frameVector.size() > 0 && frameVector.last().time == crtFrame.time
             frameVector.last().merge(crtFrame);
@@ -39,6 +45,10 @@ for fileId = 1: length(mainPaths)
         end
     end
 
+    
+    for index = 1: frameVector.size() % 保证ID是正确的
+        frameVector.at(index).ID = index;
+    end
         
     savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);
     save(savePath, 'frameVector');

@@ -11,6 +11,7 @@ classdef Area < handle
        ID;% 自己的编号
        frameID;% 所属的Frame编号
        reportID;% 报点的编号 如果没有报点的话是-1
+       inheritedReportID;% 如果这个area的祖先曾今报过点的话
        
        touchEventID;% 所属的touchEvent编号
        nextID;% 上一个Area编号
@@ -38,6 +39,17 @@ classdef Area < handle
                 end
                 
             end
+            
+            if area1.inheritedReportID ~= -1 && area2.inheritedReportID ~= -1
+                if area1.inheritedReportID == area2.inheritedReportID
+                    ret = true;
+                    return;
+                else
+                    ret = false;
+                    return;
+                end
+                
+            end 
             
             if frameVector.at(area1.frameID).time > frameVector.at(area2.frameID).time
                 oldArea = area2;
@@ -106,6 +118,9 @@ classdef Area < handle
                         crtLastArea.nextID = newAreaIds(newAreaIndex);
                         crtNewArea.previousID = lastAreaIds(lastAreaIndex);
                         crtNewArea.touchEventID = crtLastArea.touchEventID;
+                        if crtNewArea.inheritedReportID == -1
+                            crtNewArea.inheritedReportID = crtLastArea.inheritedReportID;
+                        end
                         e = touchEventVector.at(crtLastArea.touchEventID);
                         e.addAreaID(newAreaIds(newAreaIndex), areaVector);
                         isNewEvent = false;
@@ -173,6 +188,7 @@ classdef Area < handle
             
             frameTouchPointSize = theFrame.touchPosBlock.size();
             obj.reportID = -1;
+            obj.inheritedReportID = -1;
             for i = 1: frameTouchPointSize %对于没有报点的来说，frameTouchPointSize == -1
                 crtPos = theFrame.touchPosBlock.at(i);
                 if sum(ismember(obj.rangeInfo', [crtPos.x, crtPos.y], 'rows')) > 0
@@ -181,6 +197,7 @@ classdef Area < handle
                     end
                     
                     obj.reportID = theFrame.touchIDs(i);
+                    obj.inheritedReportID = theFrame.touchIDs(i); % 对于本身就报点的area来说  继承自己
                     %break;
                 end
                 
