@@ -72,5 +72,8 @@ classdef Pos
        function res = round(obj)
            res = Pos(round(obj.x), round(obj.y));
        end
+       function res = isEqual(obj, p)
+           res = (obj.x == p.x && obj.y == p.y);
+       end
    end
 end

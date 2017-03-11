@@ -1,6 +1,8 @@
     
 mainPaths = getfilepaths('data/');
+res = [];
 for fileId = 1: length(mainPaths)
+% for fileId = 1: 5
     tic
     path = mainPaths(fileId)
     savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d.mat', fileId);
@@ -14,13 +16,15 @@ for fileId = 1: length(mainPaths)
     
     gd = GD(frameVector, touchEventVector, areaVector);
     
-    clsf = Classifier();
+    
     for i = 1: totalFrameSize
         crtFrame = frameVector.at(i);
-        OnFrameReceived(crtFrame, gd, clsf);
+        for j = 1: length(crtFrame.areaIDs)
+            res = [res; Classifier.areaReceivedForStat(areaVector.at(crtFrame.areaIDs(j)), gd)];
+        end
     end
     
-    testResultVector = clsf.testResultVector;
-    savePath = sprintf('./testResultsSimple/touchEventVector%d.mat', fileId);
+    
     toc
 end
+save('res.mat', 'res') 

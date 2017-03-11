@@ -92,8 +92,8 @@ out = obj.size == 0;
 end 
 
 function[obj] = clear(obj) 
-obj.Elements = {}; 
-obj.lastInd = 0; 
+obj.Elements = cell(1, 100); 
+obj.lastInd = 0;
 end 
 
 function[out] = contains(obj,e) 

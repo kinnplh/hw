@@ -34,15 +34,77 @@ classdef TouchEvent < handle
            
        end
        
-       function showVideo(obj, whiteNum, frameVector, areaVector)
+%        function showVideo(obj, whiteNum, frameVector, areaVector)
+%            totalFrame = length(obj.areaIDs);
+%            for i = 1: totalFrame
+%                crtArea = areaVector.at(obj.areaIDs(i));
+%                crtFrame = frameVector.at(crtArea.frameID);
+%                crtFrame.showFrame(whiteNum);
+%                pause
+%            end
+%        end
+        function showVideo(obj, whiteNum, frameVector, areaVector)
            totalFrame = length(obj.areaIDs);
-           for i = 1: totalFrame
+           fig = gcf;
+           i=0;
+           while(i<totalFrame)
+               i = i+1;
+           % for i = 1: totalFrame
+               image = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM);
                crtArea = areaVector.at(obj.areaIDs(i));
                crtFrame = frameVector.at(crtArea.frameID);
+               subplot(1,4,1)
+               for j = 1:crtArea.areaSize
+                   x = crtArea.rangeInfo(1,j);
+                   y = crtArea.rangeInfo(2,j);
+                   image(x,y) = crtFrame.capacity(x,y) / whiteNum;
+                   imshow(image','InitialMagnification','fit');
+               end
+               title(['areaID: ', int2str(obj.areaIDs(i)), ...
+                   '; first reportedID: ', int2str(obj.firstReportedAreaID)]);
+               subplot(1,4,2)
                crtFrame.showFrame(whiteNum);
-               pause
+               title(['touchEventID: ', int2str(crtArea.touchEventID)]);
+               
+               
+               subplot(1,4,3)
+               crtFrame.showAreas(whiteNum,frameVector, areaVector);
+               title(['areas in frame No.', int2str(crtArea.frameID)]);
+
+               subplot(1,4,4)
+               image = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM);
+               imshow(image','InitialMagnification','fit');
+               %title([obj.getLabel(), ' frame ', int2str(i), ':', int2str(length(obj.areaIDs))]);
+               
+               skip = false;
+               while(true)
+                   w = waitforbuttonpress;
+                   if w == 0
+                   else
+                       if(fig.CurrentCharacter == 'n')
+                           skip = true;
+                           break;
+                       elseif(fig.CurrentCharacter == ' ')
+                           break;
+                       elseif(fig.CurrentCharacter == 'p')
+                           i = i-2;
+                           if(i<0)
+                            i = 0;
+                            beep();
+                           end
+                           break;
+                       end
+                   end
+               end
+               if(skip)
+                   break;
+               end
            end
-       end
+           subplot(1,4,4)
+           imshow(rand(28,16),'InitialMagnification','fit');
+           pause
+        end
+        
    end
    
    

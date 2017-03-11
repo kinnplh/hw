@@ -1,7 +1,11 @@
     
 mainPaths = getfilepaths('data/');
-% for fileId = 1: length(mainPaths)
-for fileId = 1: 1
+load('./ClassifierPara/max_X.mat');
+load('./ClassifierPara/max_Y.mat');
+load('./ClassifierPara/Poss_SMOOTH.mat');
+load('./ClassifierPara/step.mat');
+ for fileId = 1: length(mainPaths)
+% for fileId = 1: 1
     tic
     path = mainPaths(fileId)
     savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d.mat', fileId);
@@ -15,14 +19,14 @@ for fileId = 1: 1
     
     gd = GD(frameVector, touchEventVector, areaVector);
     
-    clsf = Classifier();
+    clsf = Classifier(Poss_SMOOTH, step, max_X, max_Y);
     for i = 1: totalFrameSize
         crtFrame = frameVector.at(i);
         OnFrameReceived(crtFrame, gd, clsf);
     end
     
     testResultVector = clsf.testResultVector;
-    savePath = sprintf('./testResultsSimple/testResultVector%d.mat', fileId);
+    savePath = sprintf('./testResults/testResultVector%d.mat', fileId);
     save(savePath, 'testResultVector');
     toc
 end

@@ -292,6 +292,18 @@ classdef Frame < handle
             image = obj.capacity / whiteNum;
             imshow(image','InitialMagnification','fit');
         end
-        
+        function showAreas(obj, whiteNum, frameVector, areaVector)
+            image = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM);
+            for i=1:length(obj.areaIDs)
+                crtArea = areaVector.at(obj.areaIDs(i));
+                crtFrame = frameVector.at(crtArea.frameID);
+                for j = 1:crtArea.areaSize
+                    x = crtArea.rangeInfo(1,j);
+                    y = crtArea.rangeInfo(2,j);
+                    image(x,y) = crtFrame.capacity(x,y) / whiteNum;
+                end
+            end
+            imshow(image','InitialMagnification','fit');
+        end
     end
 end

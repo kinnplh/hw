@@ -94,18 +94,11 @@ classdef Area < handle
             if ret == false && (area1.areaSize == 1 || area2.areaSize == 1)
                 % 特殊判断
                 % 要求降低为 两个格子有一条边重合
-                if area1.areaSize == 1
-                    singleRange = area1.rangeInfo;
-                    multipleRange = area2.rangeInfo;
-                else
-                    singleRange = area2.rangeInfo;
-                    multipleRange = area1.rangeInfo;
+                if 
+                    
                 end
-                diffRange = abs(multipleRange - singleRange);
-                diffRange = diffRange(1, :) + diffRange(2, :);
-                if min(diffRange) <= 1
-                    ret = true;
-                end
+                
+                
             end
             
         end

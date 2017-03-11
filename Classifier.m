@@ -1,6 +1,12 @@
 classdef Classifier < handle
     properties
         testResultVector
+        poss
+        step
+        max_X
+        max_Y
+        size_X
+        size_Y
     end
     methods (Static)
         function ret = getEventTypeSimple(area1, area2, globalData) 
@@ -20,12 +26,67 @@ classdef Classifier < handle
                 end
             end
         end
+        function [pos, neg] = calFeatureN(area1, area2, globalData)
+            % from area1 to area2
+            pos = 0;
+            neg = 0;
+            wcChangeOri = [area2.weightedCenter.x - area2.weightedCenter.x, ...
+                area2.weightedCenter.y - area1.weightedCenter.y];
+            wcChangeOri = wcChangeOri / sqrt(wcChangeOri * wcChangeOri');
+            wcMid = [area1.weightedCenter.x + area2.weightedCenter.x, ...
+                area1.weightedCenter.y + area2.weightedCenter.y] / 2;
+            area1Range = area1.getFullRange();
+            area2Range = area2.getFullRange();
+            totalRange = area1Range | area2Range;
+            [r, c] = find(totalRange == 1);
+            frame1 = globalData.frames.at(area1.frameID);
+            frame2 = globalData.frames.at(area2.frameID);
+            diffM = (frame2.capacity - frame1.capacity);
+            totalRangeSize = length(r);
+            for i = 1: totalRangeSize
+                x = r(i);
+                y = c(i);
+                midWCToP = [x, y] - wcMid;
+                midWCToP = midWCToP / sqrt(midWCToP * midWCToP');
+                if midWCToP * wcChangeOri' >= 0
+                    pos = pos + diffM(x, y);
+                else
+                    neg = neg + diffM(x, y);
+                end
+            end
+        end
+        function ret = areaReceivedForStat(crtArea, globalData)
+            % ret 第一列是pos 第二列是neg 第三列是label
+            % 只有当报点之后才会开始统计
+            ret = [];
+            if crtArea.reportID == -1
+                return;
+            end
+            %最多往前看Consts.FRAME_STROE_SIZE帧
+            crtEvent = globalData.evts.at(crtArea.touchEventID);
+            totalLength = find(crtEvent.areaIDs == crtArea.ID);
+            start = max(totalLength - Consts.FRAME_STROE_SIZE, 1);
+            
+            for i = start: totalLength - 1
+                lastArea = globalData.areas.at(crtEvent.areaIDs(i));
+                [pos, neg] = Classifier.calFeatureN(lastArea, crtArea, globalData);
+%                 if pos == 0 && neg == 0
+%                     'interest'
+%                 end
+                ret = [ret; pos, neg, crtArea.getLabel(globalData)];
+            end
+        end
     end
     
     methods
-        
-        function obj = Classifier()
+        function obj = Classifier(Poss_SMOOTH, step, max_X, max_Y)
             obj.testResultVector = Vector('TestResult');
+            obj.poss = Poss_SMOOTH;
+            obj.step = step;
+            obj.max_X = max_X;
+            obj.max_Y = max_Y;
+            obj.size_X = ceil(max_X / step);
+            obj.size_Y = ceil(max_Y / step);
         end
         function ret = getTestResultByID(obj, id)
             if obj.testResultVector.size() >= id
@@ -37,7 +98,6 @@ classdef Classifier < handle
                 ret = obj.testResultVector.at(id);
             end
         end
-        
         function newAreaReceived(obj, crtArea, globalData) 
             crtEvent = globalData.evts.at(crtArea.touchEventID);
             crtRes = obj.getTestResultByID(crtArea.touchEventID);
@@ -60,7 +120,7 @@ classdef Classifier < handle
                 end
                 focusArea = globalData.areas.at(crtEvent.areaIDs(i));% 每个都和crtArea进行比较
                 
-                ret = obj.getEventTypeSimple(crtArea, focusArea, globalData);
+                ret = obj.getEventType(crtArea, focusArea, globalData);
             end
             
             crtRes.status = [crtRes.status, ret];
@@ -82,7 +142,27 @@ classdef Classifier < handle
                 end
             end 
         end 
-        
+        function ret = getEventType(obj, area1, area2, globalData)
+            % 即使没有报点  也可以做出判断
+            [pos, neg] = obj.calFeatureN(area1, area2, globalData);
+            if pos <= 0 || neg >= 0
+                ret = Consts.CLICK;
+                return;
+            end
+            
+            x = ceil(abs(pos / obj.step));
+            y = ceil(abs(neg / obj.step));
+            if x  > obj.size_X || y > obj.size_Y
+                ret = Consts.SLIDE;
+                return;
+            end
+            if obj.poss(x, y) > Consts.BE_SLIDE_RATIO
+                ret = Consts.SLIDE;
+            else
+                ret = Consts.CLICK;
+            end
+            
+        end
     end
     
     

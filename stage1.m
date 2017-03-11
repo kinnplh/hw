@@ -1,19 +1,32 @@
 
-mainPaths = getfilepaths('data/');
-% for fileId = 1: length(mainPaths)
-for fileId = 1: 1
+mainPaths = getfilepaths('tem/');
+ for fileId = 1: length(mainPaths)
+% for fileId = 1: 5
     tic
+    
+    
     frameVector = Vector('Frame');
     path = mainPaths(fileId)
    
-    [time, model, isReported, reportedID, x, y, label, cap]...
-        = textread(cell2mat(path), '%n%s%s%n%n%n%s%s','delimiter', ',');
-
+    [time, model, isReported, reportedID, x, y, ~,label ,cap]...
+        = textread(cell2mat(path), '%n%s%s%n%n%n%s%s%s','delimiter', ',');
+    
+    firstReport = find(x > 0);
+    firstReport = firstReport(1);
+    l = cell2mat(label(firstReport));
+    if strcmp(l, 'MOVEBIG') || strcmp(l, 'SWIPEMID') || strcmp(l, 'SWIPEEDGE')
+        MAX_MOVE_BTW_FRAME = 50;
+    else
+        MAX_MOVE_BTW_FRAME = 10;
+    end
+    
+    
+    
+    
     fileLineNum = length(time);
     TUFV = Vector('Frame');
     
-    for i = 1: fileLineNum
-
+    for i = 1: fileLineNum     
         crtFrame = Frame...
             (time(i), model(i), isReported(i), reportedID(i), x(i), y(i), label(i), cap(i), frameVector.size() + 1, path);
         if ~crtFrame.isValid
@@ -27,12 +40,35 @@ for fileId = 1: 1
         % 根据实际情况决定是和frameVector的最后一个元素合并，还是作为新元素加入
         if frameVector.size() > 0 && frameVector.last().time == crtFrame.time
             frameVector.last().merge(crtFrame);
-        elseif ~isempty(crtFrame.touchIDs) 
-            frameVector.push_back(crtFrame);
-            TUFV.clear();
+        elseif ~isempty(crtFrame.touchIDs)
+            if TUFV.size() == 0
+                frameVector.push_back(crtFrame);
+            else % 判断现在在TUFV中的帧是否需要被丢掉
+                %判断两帧之间的连续性
+                %实际上是判断前一帧和这一帧相同的touchId之间的关系
+                index = find(frameVector.last().touchIDs == crtFrame.touchIDs);
+                
+                if isempty(index)
+                    frameVector.merge(TUFV);
+                    frameVector.push_back(crtFrame);
+                    TUFV.clear();
+                else
+                    crtRep = crtFrame.touchPosPixel.first();
+                    lastRep = frameVector.last().touchPosPixel.at(index);
+                    if crtRep.disTo(lastRep) <= MAX_MOVE_BTW_FRAME
+                        TUFV.clear();
+                    else
+                        frameVector.merge(TUFV);
+                        frameVector.push_back(crtFrame);
+                        TUFV.clear();
+                    end
+                end
+            end
+            
         else % unreported
             if isempty(frameVector.last().touchIDs)
                 frameVector.push_back(crtFrame);
+                assert(TUFV.size() == 0);
             else
                 if crtFrame.time - frameVector.last().time >= Consts.MAX_UNREPORTED_TIME
                     frameVector.merge(TUFV);
@@ -50,7 +86,7 @@ for fileId = 1: 1
         frameVector.at(index).ID = index;
     end
         
-    savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);
+    savePath = sprintf('./frameVectors/frameVector%d_tem.mat', fileId);
     save(savePath, 'frameVector');
     toc
 end
