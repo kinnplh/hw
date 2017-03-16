@@ -14,9 +14,9 @@ click = res(find((res(:, 3) == CLICK | res(:, 3) == FORCE_CLICK) == 1), 1:2);
 ratio = length(slide) / length(click);
 
 
-max_X = 15000;%for pos
-max_Y = 15000;%for neg
-step = 100;
+max_X = 10000;%for pos
+max_Y = 10000;%for neg
+step = 500;
 size_X = ceil(max_X / step);
 size_Y = ceil(max_Y / step);
 Click_M = zeros(size_X, size_Y);
@@ -29,13 +29,14 @@ for i = 1: length(click)
     end
     x = ceil(abs(x / step));
     y = ceil(abs(y / step));
-    if(x < size_X && y < size_Y)
+    if(x <= size_X && y <= size_Y)
         Click_M(x, y) = Click_M(x, y) + 1; 
     end
 end
 Click_M = Click_M * ratio;
 
 for i = 1: length(slide)
+    
     x = slide(i, 1);
     y = slide(i, 2);
     if(x <= 0 || y >= 0)
@@ -43,11 +44,11 @@ for i = 1: length(slide)
     end
     x = ceil(abs(x / step));
     y = ceil(abs(y / step));
-    if(x < size_X && y < size_Y)
+    if(x <= size_X && y <= size_Y)
         Slide_M(x, y) = Slide_M(x, y) + 1; 
     end
 end
-Poss_train = (Slide_M + 1) ./ (Click_M + Slide_M + 2);
+Poss_train = (Slide_M + 0.01) ./ (Click_M + Slide_M + 0.02);
 for i= 1: 1
     Poss_DOWN = [Poss_train(1,:); Poss_train(1:end-1, :)];
     Poss_UP = [Poss_train(2:end, :); Poss_train(end,:)];

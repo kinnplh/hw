@@ -3,25 +3,28 @@ classdef Area < handle
        weightedCenter; %重心 Pos
        areaSize;% 面积
        average;% 电容数据平均值
-       rangeInfo;% 2 * size，每列对应区域中每一个格子，第一行为x坐标，第二行为y坐标
+       rangeInfo;% 2 * size，每列对应区域中每一个格子，第一行为x坐标，第二行为y坐标, 第三行为电容值
+       % 电容值需要在洪泛的时候添加
        xSpan;% 在x方向上的跨度
        ySpan;% 在y方向上的跨度
        LU;% Area包围盒左上角坐标 Pos
        RD;% Area包围盒右下角坐标 Pos
        ID;% 自己的编号
-       frameID;% 所属的Frame编号
+       frameID;% 所属的 Frame 编号
        reportID;% 报点的编号 如果没有报点的话是-1
        inheritedReportID;% 如果这个area的祖先曾今报过点的话
-       reportPos;
+       reportPos; % 该area报点的位置 无报点则(-1, -1)
+       maxCapSmoothed; % 最大值及其附近的共9个block的电容的均值
        
-       touchEventID;% 所属的touchEvent编号
-       nextID;% 上一个Area编号
-       previousID;% 下一个Area编号
+       touchEventID;% 所属的 touchEvent 编号
+       nextID;% 上一个 Area 编号
+       previousID;% 下一个 Area 编号
+       
+       reportNum;
     end
     methods(Static)
         function ret = isConnected(area1, area2, frameVector, touchEventVector)
             %?增加单调性的判断
-            
             %时间差过大，不予考虑
             if abs(frameVector.at(area1.frameID).time - frameVector.at(area2.frameID).time)...
                     > Consts.CONNECTED_AREA_LARGEST_TIME_OFFSET
@@ -50,7 +53,7 @@ classdef Area < handle
                     return;
                 end
                 
-            end 
+            end
             
             if frameVector.at(area1.frameID).time > frameVector.at(area2.frameID).time
                 oldArea = area2;
@@ -66,21 +69,23 @@ classdef Area < handle
             
             % 判断两个均未报点的area，或者一个报点一个没报点（内部插帧的情况）是否构成相互连接的关系
 
-            area1WCRounded = area1.weightedCenter.round();
-            area2WCRounded = area2.weightedCenter.round();
-            if sum(ismember(area1.rangeInfo', [area2WCRounded.x, area2WCRounded.y], 'rows')) > 0 && ...
-                    sum(ismember(area2.rangeInfo', [area1WCRounded.x, area1WCRounded.y], 'rows')) > 0
+%             area1WCRounded = area1.weightedCenter.round();
+%             area2WCRounded = area2.weightedCenter.round();
+%单调性使用最亮值
+            if sum(ismember(area1.rangeInfo(1:2, :)', area2.rangeInfo(1:2, :)', 'rows')) >= min(area1.areaSize, area2.areaSize) / 2
                 lastEvent = touchEventVector.at(oldArea.touchEventID);
                 if lastEvent.firstReportedAreaID ~= -1 && lastEvent.lastReportedAreaID == -1 % 在down和up之间
                     ret = true;
                 elseif lastEvent.firstReportedAreaID == -1 % 在down之前  要求后续的area不能够过小
-                    if youngArea.areaSize * youngArea.average >= oldArea.areaSize * oldArea.average / 1.1
+                    %if youngArea.areaSize * youngArea.average >= oldArea.areaSize * oldArea.average / 1.1
+                    if youngArea.average >= oldArea.average / 1.1
                         ret = true;
                     else
                         ret = false;
                     end
                 else% 在up之后，要求后续的area不能变大
-                    if youngArea.areaSize * youngArea.average <= oldArea.areaSize * oldArea.average * 1.1
+                    %if youngArea.areaSize * youngArea.average <= oldArea.areaSize * oldArea.average * 1.1
+                    if youngArea.average <= oldArea.average * 1.1
                         ret = true;
                     else
                         ret = false;
@@ -91,7 +96,7 @@ classdef Area < handle
                 ret = false;
             end
             
-            if ret == false && (area1.areaSize == 1 || area2.areaSize == 1)
+            if ret == false && (area1.areaSize == 1 && area2.areaSize == 1)
                 % 特殊判断
                 % 要求降低为 两个格子有一条边重合
                 if area1.areaSize == 1
@@ -139,13 +144,15 @@ classdef Area < handle
                         crtLastArea.nextID = newAreaIds(newAreaIndex);
                         crtNewArea.previousID = lastAreaIds(lastAreaIndex);
                         crtNewArea.touchEventID = crtLastArea.touchEventID;
+                        
                         if crtNewArea.inheritedReportID == -1
                             crtNewArea.inheritedReportID = crtLastArea.inheritedReportID;
                         end
+                        
                         e = touchEventVector.at(crtLastArea.touchEventID);
                         e.addAreaID(newAreaIds(newAreaIndex), areaVector);
                         isNewEvent = false;
-                        %break;
+                        break;
                     end
                 
                 end
@@ -188,20 +195,25 @@ classdef Area < handle
             obj.reportPos = Pos(-1, -1);
             obj.weightedCenter = Pos(0, 0);
             obj.average = 0;
-            crtWeightX = 0;
-            crtWeightY = 0;
             theFrame = frameVector.at(obj.frameID);
-            for i = 1: obj.areaSize
-                crtCapValue = theFrame.capacity(obj.rangeInfo(1, i), obj.rangeInfo(2, i));
-                obj.average = obj.average + crtCapValue;
-                crtWeightX = obj.rangeInfo(1, i) * crtCapValue + crtWeightX;
-                crtWeightY = obj.rangeInfo(2, i) * crtCapValue + crtWeightY;
-%                 obj.weightedCenter = obj.weightedCenter.add(...
-%                     Pos(obj.rangeInfo(1, i), obj.rangeInfo(2, i)).mul(crtCapValue));
+            
+            maxCap = max(obj.rangeInfo(3, :));
+            maxCapX = obj.rangeInfo(1, obj.rangeInfo(3, :) == maxCap);
+            maxCapY = obj.rangeInfo(2, obj.rangeInfo(3, :) == maxCap);
+            if length(maxCapX) ~= 1
+                %'quite strange'
+                maxCapX = maxCapX(1);
             end
             
-            obj.weightedCenter = Pos(crtWeightX / obj.average, crtWeightY / obj.average); 
-            obj.average = obj.average / obj.areaSize;
+            subMAroundMax = theFrame.capacity(max(1, maxCapX - 1): min(maxCapX + 1, Consts.CAPACITY_BLOCK_X_NUM),...
+                max(1, maxCapY - 1): min(maxCapY + 1, Consts.CAPACITY_BLOCK_Y_NUM));
+            obj.maxCapSmoothed = mean(subMAroundMax(:));
+            obj.average = mean(obj.rangeInfo(3,:));
+            sumCap = sum(obj.rangeInfo(3,:));
+            obj.weightedCenter = Pos((obj.rangeInfo(1,:) * obj.rangeInfo(3,:)') / sumCap, ...
+                (obj.rangeInfo(2,:) * obj.rangeInfo(3,:)') / sumCap);
+            
+      
             
             % 判断这个区域是否报点
             % 遍历这个帧上所有的报点，看看哪个报点落在了这个Area中
@@ -210,24 +222,34 @@ classdef Area < handle
             frameTouchPointSize = theFrame.touchPosBlock.size();
             obj.reportID = -1;
             obj.inheritedReportID = -1;
+            obj.reportNum = 0;
+            
+            WCToReport = -1;
             for i = 1: frameTouchPointSize %对于没有报点的来说，frameTouchPointSize == -1
                 crtPos = theFrame.touchPosBlock.at(i);
-                if sum(ismember(obj.rangeInfo', [crtPos.x, crtPos.y], 'rows')) > 0
+                if sum(ismember(obj.rangeInfo(1:2,:)', [crtPos.x, crtPos.y], 'rows')) > 0
+                    obj.reportNum = obj.reportNum + 1;
+                    WCToReportTem = theFrame.touchPosPixel.at(i).disTo(Pos(...
+                        obj.weightedCenter.x * Consts.BLOCK_WIDTH, obj.weightedCenter.y * Consts.BLOCK_HEIGHT));
                     if obj.reportID ~= -1
-                        'Multiple touch events in one area!'
+                        %'Multiple touch events in one area!'
+                        
                         ppos = [];
                         for ij = 1: theFrame.touchPosBlock.size()
                         ppos = [ppos;theFrame.touchPosBlock.at(ij).x, theFrame.touchPosBlock.at(ij).y];
                         end;ppos
-                        if obj.reportID < theFrame.touchIDs(i)
+                        if WCToReport < WCToReportTem
                             continue;
                         end
                     end
+                    
+                    WCToReport = WCToReportTem;
                     obj.reportPos = theFrame.touchPosPixel.at(i);
                     obj.reportID = theFrame.touchIDs(i);
                     obj.inheritedReportID = theFrame.touchIDs(i); % 对于本身就报点的area来说  继承自己
+                    
                     % 感觉应该加上报点信息
-                    % 
+                    
                     %break;
                 end
                 

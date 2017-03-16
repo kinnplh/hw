@@ -2,6 +2,7 @@ classdef Pos
    properties
       x
       y
+      minillum
    end
    
    methods

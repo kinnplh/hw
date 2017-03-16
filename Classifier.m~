@@ -13,8 +13,8 @@ classdef Classifier < handle
             % 一直被判断成滑动
             ret = Enum.SLIDE;
         end     
-        function ret = getEventTypeBad(~, ~, ~)
-            ret = Enum.CLICK;
+        function ret = getEventTypeBad(~, )
+            
         end
         function ret = getEventTypeSimple(area1, area2, globalData) 
             %使用4个像素作为阈值  如果两者均有报点，并且报点距离之差超过4个像素
@@ -154,20 +154,20 @@ classdef Classifier < handle
             % 即使没有报点  也可以做出判断
             [pos, neg] = obj.calFeatureN(area1, area2, globalData);
             if pos <= 0 || neg >= 0
-                ret = Enum.CLICK;
+                ret = Consts.CLICK;
                 return;
             end
             
             x = ceil(abs(pos / obj.step));
             y = ceil(abs(neg / obj.step));
             if x  > obj.size_X || y > obj.size_Y
-                ret = Enum.SLIDE;
+                ret = Consts.SLIDE;
                 return;
             end
             if obj.poss(x, y) > Consts.BE_SLIDE_RATIO
-                ret = Enum.SLIDE;
+                ret = Consts.SLIDE;
             else
-                ret = Enum.CLICK;
+                ret = Consts.CLICK;
             end
             
         end

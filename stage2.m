@@ -1,10 +1,10 @@
    
-mainPaths = getfilepaths('tem/');
+mainPaths = getfilepaths('data/');
 for fileId = 1: length(mainPaths)
 % for fileId = 1: 5
     tic
     path = mainPaths(fileId)
-    savePath = sprintf('./frameVectors/frameVector%d_tem.mat', fileId);   % might be quite slow in fact
+    savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);   % might be quite slow in fact
     load(savePath);
     lastAreaIds = [];
     areaVector = Vector('Area');
@@ -12,7 +12,6 @@ for fileId = 1: length(mainPaths)
     for i = 1: frameVector.size()
         newAreaIds = frameVector.at(i).flooding(areaVector, frameVector);
         % 根据lastAreaIds（上一帧上所有的Area编号）和 newAreaIds 确认连接关系
-        
         lastAreaIds = Area.connectAreas(lastAreaIds, newAreaIds, areaVector, touchEventVector, frameVector);
     end
     
@@ -23,5 +22,7 @@ for fileId = 1: length(mainPaths)
     savePath = sprintf('./touchEvents/touchEventVector%d_tem.mat', fileId);
     save(savePath, 'touchEventVector');
 
+    tem
+    
     toc
 end

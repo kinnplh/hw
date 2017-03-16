@@ -19,6 +19,6 @@ classdef Consts
         UNKNOWN = 5;
         
         FRAME_STROE_SIZE = 3;
-        BE_SLIDE_RATIO = 0.6;
+        BE_SLIDE_RATIO = 0.7;
 	end
 end

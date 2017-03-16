@@ -5,6 +5,8 @@ classdef TouchEvent < handle
       lastReportedAreaID;
       reportID;
       ID;
+      
+      multipleFrameNum;
    end
    
    methods
@@ -15,6 +17,7 @@ classdef TouchEvent < handle
            obj.lastReportedAreaID = -1;
            obj.reportID = -1;
            obj.ID = id;
+           obj.multipleFrameNum = 0;
        end
            
        function addAreaID(obj, newID, areaVector)
@@ -28,8 +31,11 @@ classdef TouchEvent < handle
                assert(obj.reportID == areaVector.at(newID).reportID);
            end
            
-           if obj.firstReportedAreaID ~= -1 && obj.reportID >= 0 && areaVector.at(newID).reportID < 0
+           if obj.firstReportedAreaID ~= -1 && obj.reportID >= 0 && areaVector.at(newID).reportID < 0 && obj.lastReportedAreaID == -1
                obj.lastReportedAreaID = obj.areaIDs(end - 1);
+           end
+           if areaVector.at(newID).reportNum > 1
+               obj.multipleFrameNum = obj.multipleFrameNum + 1;
            end
            
        end

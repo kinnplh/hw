@@ -1,16 +1,16 @@
 % 统计点击事件的判断正确率
 mainPaths = getfilepaths('data/');
-totalClickNum = 0;
-clickEventMoved = 0; % 和报点位置相比   出现了报点位移的点
+totalClickNumSimple = 0;
+clickEventMovedSimple = 0; % 和报点位置相比   出现了报点位移的点
 for fileId = 1: length(mainPaths)
    mainPaths(fileId)
-   savePath = sprintf('./testResultsSimple/testResultVector%d.mat', fileId); 
+   savePath = sprintf('./testResults/testResultVector%d.mat', fileId); 
    load(savePath); % get testResultVector
-   savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d.mat', fileId);
+   savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_tem.mat', fileId);
    load(savePath); % get frameVector
-   savePath = sprintf('./areas/areaVector%d.mat', fileId);
+   savePath = sprintf('./areas/areaVector%d_tem.mat', fileId);
    load(savePath); % get areaVector
-   savePath = sprintf('./touchEvents/touchEventVector%d.mat', fileId);
+   savePath = sprintf('./touchEvents/touchEventVector%d_tem.mat', fileId);
    load(savePath); % get touchEventVector
    
    resultSize = testResultVector.size();
@@ -21,6 +21,7 @@ for fileId = 1: length(mainPaths)
        crtRes = testResultVector.at(i);
        crtEvent = touchEventVector.at(crtRes.touchEventID);
        assert(i == crtRes.touchEventID);
+       assert(crtRes.actualReportPos.size() == length(crtEvent.areaIDs));
        if crtEvent.firstReportedAreaID == -1
            continue; % not reported
        end
@@ -42,7 +43,7 @@ for fileId = 1: length(mainPaths)
        
        
        reportPos = reportFrame.touchPosPixel.at(reportIndex);
-       totalClickNum = totalClickNum + 1;
+       totalClickNumSimple = totalClickNumSimple + 1;
        
        startIndex = find(crtEvent.areaIDs == crtEvent.firstReportedAreaID);
        if crtEvent.lastReportedAreaID == -1
@@ -54,12 +55,12 @@ for fileId = 1: length(mainPaths)
        for j = startIndex: endIndex
            crtArea = areaVector.at(crtEvent.areaIDs(j));
            crtFrame = frameVector.at(crtArea.frameID);
-           
+           assert(crtArea.reportID ~= -1)
+           assert(~crtRes.actualReportPos.at(j).isEqual(Pos(-1, -1)));
            % should report point in this area
            % 我们要求对于一个点击事件而言，所有的报点  都应该和down那个时刻的报点一致
-           if ~reportPos.isEqual(crtFrame.touchPosPixel.at(crtFrame.touchIDs == crtArea.reportID))
-               
-               clickEventMoved = clickEventMoved + 1;
+           if ~reportPos.isEqual(crtRes.actualReportPos.at(j))
+               clickEventMovedSimple = clickEventMovedSimple + 1;
                break;
            end
        end

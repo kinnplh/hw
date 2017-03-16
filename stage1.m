@@ -1,5 +1,5 @@
 
-mainPaths = getfilepaths('tem/');
+mainPaths = getfilepaths('data/');
  for fileId = 1: length(mainPaths)
 % for fileId = 1: 5
     tic
@@ -8,13 +8,13 @@ mainPaths = getfilepaths('tem/');
     frameVector = Vector('Frame');
     path = mainPaths(fileId)
    
-    [time, model, isReported, reportedID, x, y, ~,label ,cap]...
-        = textread(cell2mat(path), '%n%s%s%n%n%n%s%s%s','delimiter', ',');
+    [time, model, isReported, reportedID, x, y,label ,cap]...
+        = textread(cell2mat(path), '%n%s%s%n%n%n%s%s','delimiter', ',');
     
     firstReport = find(x > 0);
     firstReport = firstReport(1);
     l = cell2mat(label(firstReport));
-    if strcmp(l, 'MOVEBIG') || strcmp(l, 'SWIPEMID') || strcmp(l, 'SWIPEEDGE')
+    if strcmp(l, 'SLIDE') || strcmp(l, 'DRAG')
         MAX_MOVE_BTW_FRAME = 50;
     else
         MAX_MOVE_BTW_FRAME = 10;
@@ -26,7 +26,11 @@ mainPaths = getfilepaths('tem/');
     fileLineNum = length(time);
     TUFV = Vector('Frame');
     
-    for i = 1: fileLineNum     
+    for i = 1: fileLineNum    
+        if time(i) == 6475
+            
+            
+        end
         crtFrame = Frame...
             (time(i), model(i), isReported(i), reportedID(i), x(i), y(i), label(i), cap(i), frameVector.size() + 1, path);
         if ~crtFrame.isValid
@@ -59,9 +63,9 @@ mainPaths = getfilepaths('tem/');
                         TUFV.clear();
                     else
                         frameVector.merge(TUFV);
-                        frameVector.push_back(crtFrame);
                         TUFV.clear();
                     end
+                    frameVector.push_back(crtFrame);
                 end
             end
             
@@ -86,7 +90,7 @@ mainPaths = getfilepaths('tem/');
         frameVector.at(index).ID = index;
     end
         
-    savePath = sprintf('./frameVectors/frameVector%d_tem.mat', fileId);
+    savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);
     save(savePath, 'frameVector');
     toc
 end

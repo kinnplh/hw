@@ -4,7 +4,7 @@ load('./ClassifierPara/max_X.mat');
 load('./ClassifierPara/max_Y.mat');
 load('./ClassifierPara/Poss_SMOOTH.mat');
 load('./ClassifierPara/step.mat');
- for fileId = 1: length(mainPaths)
+ for fileId = 3: length(mainPaths)
 % for fileId = 1: 1
     tic
     path = mainPaths(fileId)
@@ -21,12 +21,15 @@ load('./ClassifierPara/step.mat');
     
     clsf = Classifier(Poss_SMOOTH, step, max_X, max_Y);
     for i = 1: totalFrameSize
+        if ~isempty(frameVector.at(i).areaIDs == 155)
+            
+        end
         crtFrame = frameVector.at(i);
         OnFrameReceived(crtFrame, gd, clsf);
     end
     
     testResultVector = clsf.testResultVector;
-    savePath = sprintf('./testResults/testResultVector%d.mat', fileId);
+    savePath = sprintf('./testResultsNaive/testResultVector%d.mat', fileId);
     save(savePath, 'testResultVector');
     toc
 end

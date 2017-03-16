@@ -93,15 +93,16 @@ classdef Frame < handle
             obj.labels.merge(f.labels);
         end
         function ret = flooding(obj, areaVector, frameVector)
+            ret = [];
             frame = obj;
             WIDTH = Consts.CAPACITY_BLOCK_X_NUM; 
             HEIGHT = Consts.CAPACITY_BLOCK_Y_NUM;
-            ret = [];
+            
             data = frame.capacity;
             
             localmax = [];
-            for x = 1:WIDTH
-                for y = 1:HEIGHT
+            for x = 1:WIDTH,
+                for y = 1:HEIGHT,
                     xx = max([x-1,1]):min([WIDTH,x+1]);
                     yy = max([y-1,1]):min([HEIGHT,y+1]);
                     d = data(xx,yy);
@@ -120,14 +121,18 @@ classdef Frame < handle
                 localmax = localmax(I,:);
 
                 obj.areaInfo = zeros(Consts.CAPACITY_BLOCK_X_NUM, Consts.CAPACITY_BLOCK_Y_NUM) - 1;
-                
+                ret = [];
                                 
                 for ii = 1:length(localmax(:,1))
-                    % (x, y) 应该是这个Area洪泛的起点
+                    % (x, y) ??????????Area?é????????
                     x = localmax(ii,1);
                     y = localmax(ii,2);
                     maxillum = localmax(ii,3);
                     
+                    if(isempty(maxillum))
+                                a = 1;
+                    end
+                            
                     if obj.areaInfo(x, y) ~= -1
                         continue;
                     end
@@ -137,12 +142,14 @@ classdef Frame < handle
                     % a new area
                     areaRangeInfo = [];
                     posQueue = Queue('Pos');
-                    posQueue.offer(Pos(x, y));
+                    newpos = Pos(x, y);
+                    newpos.minillum = maxillum;
+                    posQueue.offer(newpos);
                     
                     while ~posQueue.isempty()
                         crtPos = posQueue.poll();
-                        areaRangeInfo = [areaRangeInfo, [crtPos.x; crtPos.y]];
-                        illum = frame.capacity(crtPos.x, crtPos.y);
+                        areaRangeInfo = [areaRangeInfo, [crtPos.x; crtPos.y; obj.capacity(crtPos.x, crtPos.y)]];
+                        
                         for iii = 1: 4
                             switch(iii)
                                 case 1
@@ -161,9 +168,23 @@ classdef Frame < handle
                                 continue;
                             end
                             
-                            if obj.IsConnected(temPos, illum, maxillum)
+                            % connect and update minillum
+                            illum = frame.capacity(temPos.x, temPos.y);
+                            lastillum = frame.capacity(crtPos.x, crtPos.y);
+                            minillum = crtPos.minillum;
+                            
+                            
+                            if obj.IsConnected(illum, lastillum, minillum, maxillum)
                                 obj.areaInfo(temPos.x, temPos.y) = 1;
+                                if(illum<minillum)
+                                    temPos.minillum = illum;
+                                else
+                                    temPos.minillum = minillum;
+                                end
                                 posQueue.offer(temPos);
+                                if(isempty(temPos.minillum))
+                                    a = 1;
+                                end
                             end
                         end
                     end
@@ -175,9 +196,9 @@ classdef Frame < handle
             end
             obj.areaIDs = ret;
         end
-        function res = IsConnected(obj, p, illum0, maxillum) %????????????????
+        function res = IsConnected(obj, illum, lastillum, minillum, maxillum) %????????????????
             % res = obj.rawData.capacityData(p.x, p.y) > min(obj.threshold, illum/6); 
-            illum = obj.capacity(p.x, p.y);
+            % illum = obj.capacity(p.x, p.y);
             
             th = 50;
             if(maxillum < 250)
@@ -186,9 +207,9 @@ classdef Frame < handle
                 th = maxillum/5;
             else
                 th = 400;
-            end      
+            end
 
-            if(illum > th && illum<=2*illum0)
+            if(illum > th && illum<=1.2*minillum)
             %if(illum > 50 && illum>0.3*illum0 && illum<=2*illum0)
                 res = 1;
             else
