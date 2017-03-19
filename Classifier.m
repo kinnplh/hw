@@ -37,7 +37,7 @@ classdef Classifier < handle
             % from area1 to area2
             pos = 0;
             neg = 0;
-            wcChangeOri = [area2.weightedCenter.x - area2.weightedCenter.x, ...
+            wcChangeOri = [area2.weightedCenter.x - area1.weightedCenter.x, ...
                 area2.weightedCenter.y - area1.weightedCenter.y];
             wcChangeOri = wcChangeOri / sqrt(wcChangeOri * wcChangeOri');
             wcMid = [area1.weightedCenter.x + area2.weightedCenter.x, ...
@@ -128,6 +128,10 @@ classdef Classifier < handle
                 
                 %ret = obj.getEventType(crtArea, focusArea, globalData);
                 ret = obj.getEventType(crtArea, focusArea, globalData);
+                if ret == Enum.SLIDE
+                    crtRes.area1ID = focusArea.ID;
+                    crtRes.area2ID = crtArea.ID;
+                end
             end
             
             crtRes.status = [crtRes.status, ret];

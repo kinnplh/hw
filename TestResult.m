@@ -6,6 +6,9 @@ classdef TestResult < handle
        actualReportPos; % 针对于TouchEvent中的每个Area，如果没有报点则是一个非法的位置
        areaIDs; % 理论上应该和touchEvent中的一样  但是现在好像并不是这样的
        status;
+       
+       area1ID; % 如果这个事件被判断成滑动的话   记录一下是哪两个area导致的
+       area2ID;
     end
     
     methods
@@ -14,7 +17,8 @@ classdef TestResult < handle
             obj.actualReportPos = Vector('Pos');
             obj.status = [];
             obj.areaIDs = [];
-            
+            obj.area1ID = -1;
+            obj.area2ID = -1;
         end
         
     end
