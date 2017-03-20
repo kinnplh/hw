@@ -20,5 +20,7 @@ classdef Consts
         
         FRAME_STROE_SIZE = 3;
         BE_SLIDE_RATIO = 0.7;
+        
+        VALID_REPORT_CAP_RATIO = 0.1;
 	end
 end

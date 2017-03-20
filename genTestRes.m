@@ -4,7 +4,7 @@ totalClickNumSimple = 0;
 clickEventMovedSimple = 0; % 和报点位置相比   出现了报点位移的点
 for fileId = 1: length(mainPaths)
    mainPaths(fileId)
-   savePath = sprintf('./testResults/testResultVector%d.mat', fileId); 
+   savePath = sprintf('./testResultsOnlyDown/testResultVector%d.mat', fileId); 
    load(savePath); % get testResultVector
    savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_tem.mat', fileId);
    load(savePath); % get frameVector

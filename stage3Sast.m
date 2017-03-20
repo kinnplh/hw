@@ -1,6 +1,5 @@
     
 mainPaths = getfilepaths('data/');
-res = [];
 for fileId = 1: length(mainPaths)
 % for fileId = 1: 5
     tic

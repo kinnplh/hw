@@ -26,7 +26,7 @@ load('./ClassifierPara/step.mat');
     end
     
     testResultVector = clsf.testResultVector;
-    savePath = sprintf('./testResults/testResultVector%d.mat', fileId);
+    savePath = sprintf('./testResultsOnlyDown/testResultVector%d.mat', fileId);
     save(savePath, 'testResultVector');
     toc
 end

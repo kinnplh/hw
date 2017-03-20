@@ -9,6 +9,8 @@ classdef TestResult < handle
        
        area1ID; % 如果这个事件被判断成滑动的话   记录一下是哪两个area导致的
        area2ID;
+       
+       maxCapEver;
     end
     
     methods
@@ -19,6 +21,7 @@ classdef TestResult < handle
             obj.areaIDs = [];
             obj.area1ID = -1;
             obj.area2ID = -1;
+            obj.maxCapEver = -1;
         end
         
     end
