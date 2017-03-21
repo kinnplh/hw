@@ -1,5 +1,5 @@
 
-mainPaths = getfilepaths('data/');
+mainPaths = getfilepaths('edge/');
  for fileId = 1: length(mainPaths)
 % for fileId = 1: 5
     tic
@@ -90,7 +90,7 @@ mainPaths = getfilepaths('data/');
         frameVector.at(index).ID = index;
     end
         
-    savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);
+    savePath = sprintf('./frameVectors/frameVector%dedge.mat', fileId);
     save(savePath, 'frameVector');
     toc
 end

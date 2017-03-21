@@ -11,6 +11,7 @@ classdef TestResult < handle
        area2ID;
        
        maxCapEver;
+       capDiffThreshold;
     end
     
     methods
@@ -22,6 +23,7 @@ classdef TestResult < handle
             obj.area1ID = -1;
             obj.area2ID = -1;
             obj.maxCapEver = -1;
+            obj.capDiffThreshold = 1000;
         end
         
     end

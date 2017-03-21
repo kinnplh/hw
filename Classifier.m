@@ -94,6 +94,47 @@ classdef Classifier < handle
 %             end
 
         end
+        
+        function ret = getTypeFromSingleArea(crtArea, testRes, globalData)
+            if crtArea.reportID < 0 || crtArea.previousID <= 0% 没有报点
+                ret = Enum.CLICK;
+                return;
+            end
+            
+            if crtArea.maxCapSmoothed < testRes.maxCapEver * Consts.VALID_REPORT_CAP_RATIO
+                testRes.maxCapEver = testRes.maxCapEver * 0.75;
+                ret = Enum.CLICK;
+                return;
+            end
+            
+            lastArea = crtArea;
+            res = nan;
+            while isnan(res) && lastArea.previousID > 0
+                
+                lastArea = globalData.areas.at(lastArea.previousID);
+                if lastArea.reportID < 0 || lastArea.reportPos.isEqual(crtArea.reportPos)
+                    ret = Enum.CLICK;
+                    return;
+                end
+                [N1, N2] = Classifier.calFeatureN(lastArea, crtArea, globalData);
+                res = abs(N1 + N2) / lastArea.weightedCenter.disTo(crtArea.weightedCenter);
+            end
+            
+            if isnan(res)
+                ret = Enum.CLICK;
+                return;
+            end
+            
+            if res > testRes.capDiffThreshold
+                ret = Enum.CLICK;
+                testRes.capDiffThreshold = testRes.capDiffThreshold * 2;
+                return;
+            end
+            
+            ret = Enum.SLIDE;
+            return;
+            
+        end
     end
     
     methods
@@ -133,28 +174,13 @@ classdef Classifier < handle
                 ret = crtRes.status(end);
             end
             
-            if (~(ret == Enum.SLIDE)) && crtArea.reportID  >= 0
-                % 判断当前帧和down帧相比，有没有显著的移动
-                reportArea = globalData.areas.at(globalData.evts.at(crtArea.touchEventID).firstReportedAreaID);
-                ret = obj.getEventType(crtArea, reportArea, globalData);
+            if (~(ret == Enum.SLIDE))
+                ret = obj.getTypeFromSingleArea(crtArea, crtRes, globalData);
                 if ret == Enum.SLIDE
-                    crtRes.area1ID = reportArea.ID;
+                    crtRes.area1ID = crtArea.previousID;
                     crtRes.area2ID = crtArea.ID;
                 end
             end
-%             for i = start: totalLength - 1
-%                 if ret == Enum.SLIDE % 现在的处理方式是，如果之前判断出是一个滑动  那么我们就默认滑动会继续下去
-%                     break;
-%                 end
-%                 focusArea = globalData.areas.at(crtEvent.areaIDs(i));% 每个都和crtArea进行比较
-%                 
-%                 %ret = obj.getEventType(crtArea, focusArea, globalData);
-%                 ret = obj.getEventType(crtArea, focusArea, globalData);
-%                 if ret == Enum.SLIDE
-%                     crtRes.area1ID = focusArea.ID;
-%                     crtRes.area2ID = crtArea.ID;
-%                 end
-%             end
             
             crtRes.status = [crtRes.status, ret];
             crtRes.areaIDs = [crtRes.areaIDs, crtArea.ID];
@@ -172,11 +198,11 @@ classdef Classifier < handle
                     crtRes.actualReportPos.push_back(Pos(-1, -1));
                 else
                     f = globalData.frames.at(crtArea.frameID);
-                    if crtArea.maxCapSmoothed < crtRes.maxCapEver * Consts.VALID_REPORT_CAP_RATIO
-                        crtRes.actualReportPos.push_back(crtRes.actualReportPos.last());
-                    else
+%                     if crtArea.maxCapSmoothed < crtRes.maxCapEver * Consts.VALID_REPORT_CAP_RATIO
+%                         crtRes.actualReportPos.push_back(crtRes.actualReportPos.last());
+%                     else
                         crtRes.actualReportPos.push_back(f.touchPosPixel.at(f.touchIDs == crtEvent.reportID));
-                    end
+%                     end
                     
                 end
             end 

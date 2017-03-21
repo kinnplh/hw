@@ -208,7 +208,7 @@ classdef Area < handle
             
             diffRangeInfo = abs(obj.rangeInfo - [maxCapX; maxCapY; 0]);
             indexes = ((diffRangeInfo(1, :) <= 1) & (diffRangeInfo(2, :) <= 1)) == 1;
-            diffRangeInfo = diffRangeInfo(indexes);
+            diffRangeInfo = diffRangeInfo(:, indexes);
             obj.maxCapSmoothed = mean(diffRangeInfo(3, :));
             
             

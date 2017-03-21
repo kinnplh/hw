@@ -1,10 +1,10 @@
    
-mainPaths = getfilepaths('data/');
+mainPaths = getfilepaths('edge/');
 for fileId = 1: length(mainPaths)
 % for fileId = 1: 5
     tic
     path = mainPaths(fileId)
-    savePath = sprintf('./frameVectors/frameVector%d.mat', fileId);   % might be quite slow in fact
+    savePath = sprintf('./frameVectors/frameVector%dedge.mat', fileId);   % might be quite slow in fact
     load(savePath);
     lastAreaIds = [];
     areaVector = Vector('Area');
@@ -15,11 +15,11 @@ for fileId = 1: length(mainPaths)
         lastAreaIds = Area.connectAreas(lastAreaIds, newAreaIds, areaVector, touchEventVector, frameVector);
     end
     
-    savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_tem.mat', fileId);
+    savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_temedge.mat', fileId);
     save(savePath, 'frameVector');% 现在的frameVector已经包含了足够的信息，可以逐帧输出进行测试
-    savePath = sprintf('./areas/areaVector%d_tem.mat', fileId);
+    savePath = sprintf('./areas/areaVector%d_temedge.mat', fileId);
     save(savePath, 'areaVector');
-    savePath = sprintf('./touchEvents/touchEventVector%d_tem.mat', fileId);
+    savePath = sprintf('./touchEvents/touchEventVector%d_temedge.mat', fileId);
     save(savePath, 'touchEventVector');
 
     tem
