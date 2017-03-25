@@ -5,3 +5,4 @@ touchEvents/*
 data/*
 */*
 *.zip
+.DS_Store
