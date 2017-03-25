@@ -3,7 +3,8 @@ function OnFrameReceived(frame, gd, cls)
     % 需要对所有的Area进行处理
     
     for i = 1: length(frame.areaIDs)
-        cls.newAreaReceived(gd.areas.at(frame.areaIDs(i)), gd);
+        %cls.newAreaReceived(gd.areas.at(frame.areaIDs(i)), gd);
+        cls.newAreaReceivedForStat(gd.areas.at(frame.areaIDs(i)), gd);
     end
     
     

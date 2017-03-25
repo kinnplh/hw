@@ -1,13 +1,8 @@
-
-mainPaths = getfilepaths('edge/');
+mainPaths = getfilepaths('dataTouchAndHold/');
  for fileId = 1: length(mainPaths)
-% for fileId = 1: 5
     tic
-    
-    
     frameVector = Vector('Frame');
     path = mainPaths(fileId)
-   
     [time, model, isReported, reportedID, x, y,label ,cap]...
         = textread(cell2mat(path), '%n%s%s%n%n%n%s%s','delimiter', ',');
     
@@ -19,18 +14,11 @@ mainPaths = getfilepaths('edge/');
     else
         MAX_MOVE_BTW_FRAME = 10;
     end
-    
-    
-    
-    
+
     fileLineNum = length(time);
     TUFV = Vector('Frame');
     
     for i = 1: fileLineNum    
-        if time(i) == 6475
-            
-            
-        end
         crtFrame = Frame...
             (time(i), model(i), isReported(i), reportedID(i), x(i), y(i), label(i), cap(i), frameVector.size() + 1, path);
         if ~crtFrame.isValid
@@ -90,7 +78,7 @@ mainPaths = getfilepaths('edge/');
         frameVector.at(index).ID = index;
     end
         
-    savePath = sprintf('./frameVectors/frameVector%dedge.mat', fileId);
+    savePath = sprintf('./frameVectors/frameVector%d_TouchAndHold.mat', fileId);
     save(savePath, 'frameVector');
     toc
 end

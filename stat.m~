@@ -2,16 +2,16 @@
 
 mainPaths = getfilepaths('edge/');
 
-displacement_distance_ratio_edge = []; % 与down一帧统计   当然 down帧是不能被算上的
+displacement_distance_ratio = []; % 与down一帧统计   当然 down帧是不能被算上的
 
-for fileId = 1: length(mainPaths)
+for fileID = 1: length(mainPaths)
     tic
     path = mainPaths(fileId)
-    savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_temedge.mat', fileId);
+    savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_TouchAndHold.mat', fileId);
     load(savePath);
-    savePath = sprintf('./areas/areaVector%d_temedge.mat', fileId);
+    savePath = sprintf('./areas/areaVector%d_TouchAndHold.mat', fileId);
     load(savePath);
-    savePath = sprintf('./touchEvents/touchEventVector%d_temedge.mat', fileId);
+    savePath = sprintf('./touchEvents/touchEventVector%d_TouchAndHold.mat', fileId);
     load(savePath);    
     
     
@@ -37,8 +37,7 @@ for fileId = 1: length(mainPaths)
             crtArea = areaVector.at(crtEvent.areaIDs(areaIndex));
             lastArea = areaVector.at(crtEvent.areaIDs(areaIndex - 1));
             crtDistance = crtDistance + crtArea.weightedCenter.disTo(lastArea.weightedCenter);
-            displacement_distance_ratio_edge = [displacement_distance_ratio_edge;...
-                crtArea.weightedCenter.disTo(downAreaWeightedCenter) / crtDistance];
+            displacement_distance_ratio = 
         end
         
         

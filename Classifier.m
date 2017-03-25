@@ -117,6 +117,10 @@ classdef Classifier < handle
                     return;
                 end
                 [N1, N2] = Classifier.calFeatureN(lastArea, crtArea, globalData);
+                if N1 <= 0 || N2 >= 0
+                    ret = Enum.CLICK;
+                    return;
+                end
                 res = abs(N1 + N2) / lastArea.weightedCenter.disTo(crtArea.weightedCenter);
             end
             
@@ -127,7 +131,7 @@ classdef Classifier < handle
             
             if res > testRes.capDiffThreshold
                 ret = Enum.CLICK;
-                testRes.capDiffThreshold = testRes.capDiffThreshold * 2;
+                %testRes.capDiffThreshold = testRes.capDiffThreshold * 2;
                 return;
             end
             
@@ -175,6 +179,7 @@ classdef Classifier < handle
             end
             
             if (~(ret == Enum.SLIDE))
+                
                 ret = obj.getTypeFromSingleArea(crtArea, crtRes, globalData);
                 if ret == Enum.SLIDE
                     crtRes.area1ID = crtArea.previousID;
@@ -225,6 +230,36 @@ classdef Classifier < handle
                 ret = Enum.SLIDE;
             else
                 ret = Enum.CLICK;
+            end
+            
+        end
+        
+        function newAreaReceivedForStat(obj, crtArea, globalData)
+%             crtEvent = globalData.evts.at(crtArea.touchEventID);
+            crtRes = obj.getTestResultByID(crtArea.touchEventID);
+            if crtArea.reportID < 0 || crtArea.previousID <= 0% 没有报点
+                %crtRes.eiff = [crtRes.eiff, [-1; -1; -1]];
+                return;
+            end
+            
+            lastArea = crtArea;
+            res = nan;
+            while isnan(res) && lastArea.previousID > 0
+                
+                lastArea = globalData.areas.at(lastArea.previousID);
+                if lastArea.reportID < 0 || lastArea.reportPos.isEqual(crtArea.reportPos)
+                    %crtRes.eiff = [crtRes.eiff, [-1; -1; -1]];
+                    return;
+                end
+                [N1, N2] = Classifier.calFeatureN(lastArea, crtArea, globalData);
+                res = abs(N1 + N2) / lastArea.weightedCenter.disTo(crtArea.weightedCenter);
+            end
+            if(isnan(res))
+                %crtRes.eiff = [crtRes.eiff, [-1; -1; -1]];
+                return;
+            else
+                crtRes.eiff = [crtRes.eiff, [N1; N2; res]];
+                return;
             end
             
         end

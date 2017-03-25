@@ -4,11 +4,11 @@ totalClickNumSimple = 0;
 clickEventMovedSimple = 0; % 和报点位置相比   出现了报点位移的点
 for fileId = 1: length(mainPaths)
    mainPaths(fileId)
-   savePath = sprintf('./testResults/testResultVector%d_TouchAndHold.mat', fileId); 
+   savePath = sprintf('./testResultsOnlyDown/testResultVector%d_TouchAndHold.mat', fileId); 
    load(savePath); % get testResultVector
    savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_TouchAndHold.mat', fileId);
    load(savePath); % get frameVector
-   savePath = sprintf('./areas/areaVector%d_TouchAndHold.mat', fileId);
+   savePath = sprintf('./areas/areaVector%d_tem.mat', fileId);
    load(savePath); % get areaVector
    savePath = sprintf('./touchEvents/touchEventVector%d_TouchAndHold.mat', fileId);
    load(savePath); % get touchEventVector
@@ -34,7 +34,7 @@ for fileId = 1: length(mainPaths)
        reportIndex = find(reportFrame.touchIDs == reportID);
        if ~isClick
            l = cell2mat(reportFrame.labels.at(reportIndex));
-           if strcmp(l, 'CLICK') || strcmp(l, 'FORCE_CLICK') || strcmp(l, 'TOUCH_HOLD')
+           if strcmp(l, 'CLICK') || strcmp(l, 'FORCE_CLICK') || strcmp()
                isClick = true;
            else
                break;
@@ -71,8 +71,7 @@ for fileId = 1: length(mainPaths)
 end
 % 统计使用4像素阈值   点击变滑动的数量 以及总的点击数量
 % ******************************************************************************
-totalClickNumSimple
-clickEventMovedSimple
+
 
 
 
