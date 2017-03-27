@@ -135,8 +135,42 @@ classdef Classifier < handle
                 return;
             end
             
-            ret = Enum.SLIDE;
-            return;
+            
+            % 判断ratio  决定是不是滑动
+            
+            if crtArea.displacement_distance_ratio == -1
+                ret = Enum.CLICK;
+                return;
+            end
+            
+            crtEvent = globalData.evts.at(crtArea.touchEventID);
+            if crtArea.displacement_distance_ratio > 0.4
+                if crtArea.reportPos.disTo(crtEvent.downReportPos) > 4
+                    ret = Enum.SLIDE;
+                    return;
+                else
+                    ret = Enum.CLICK;
+                    return;
+                end
+            end
+
+            if crtArea.displacement_distance_ratio < 0.2
+                if crtArea.reportPos.disTo(crtEvent.downReportPos) > 24
+                    ret = Enum.SLIDE;
+                    return;
+                else
+                    ret = Enum.CLICK;
+                    return;
+                end
+            end
+            
+            if crtArea.reportPos.disTo(crtEvent.downReportPos) > 12
+                ret = Enum.SLIDE;
+                return;
+            else
+                ret = Enum.CLICK;
+                return;
+            end
             
         end
     end
@@ -163,15 +197,12 @@ classdef Classifier < handle
         end
         function newAreaReceived(obj, crtArea, globalData) 
             crtEvent = globalData.evts.at(crtArea.touchEventID);
-            crtRes = obj.getTestResultByID(crtArea.touchEventID);
-            %最多往前看Consts.FRAME_STROE_SIZE帧
-            
+            crtRes = obj.getTestResultByID(crtArea.touchEventID);            
             crtRes.maxCapEver = max(crtRes.maxCapEver, crtArea.maxCapSmoothed);
             
             totalLength = find(crtEvent.areaIDs == crtArea.ID);
             assert(length(totalLength) == 1);
             
-%             start = max(totalLength - Consts.FRAME_STROE_SIZE, 1);
             if isempty(crtRes.status)
                 ret = Enum.UNKNOWN;
             else

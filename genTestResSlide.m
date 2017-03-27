@@ -1,18 +1,18 @@
 % 统计点击事件的判断正确率
-mainPaths = getfilepaths('data/');
+mainPaths = getfilepaths('edge/');
 totalSlideNum = 0;
 delaySlideNum = 0; % 和报点位置相比   出现了报点位移的点
 aheadSlideNum = 0;
 diffTime = [];
 for fileId = 1: length(mainPaths)
    mainPaths(fileId)
-   savePath = sprintf('./testResultsOnlyDown/testResultVector%d.mat', fileId); 
+   savePath = sprintf('./testResults/testResultVector%d_edge.mat', fileId); 
    load(savePath); % get testResultVector
-   savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_tem.mat', fileId);
+   savePath = sprintf('./frameVectorsFlooded/frameVectorFlooded%d_edge.mat', fileId);
    load(savePath); % get frameVector
-   savePath = sprintf('./areas/areaVector%d_tem.mat', fileId);
+   savePath = sprintf('./areas/areaVector%d_edge.mat', fileId);
    load(savePath); % get areaVector
-   savePath = sprintf('./touchEvents/touchEventVector%d_tem.mat', fileId);
+   savePath = sprintf('./touchEvents/touchEventVector%d_edge.mat', fileId);
    load(savePath); % get touchEventVector
    
    resultSize = testResultVector.size();

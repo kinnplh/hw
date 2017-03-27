@@ -7,6 +7,10 @@ classdef TouchEvent < handle
       ID;
       
       multipleFrameNum;
+      WCMoveDistance;
+      firstWCStable;
+      downReportPos;
+      
    end
    
    methods
@@ -18,19 +22,55 @@ classdef TouchEvent < handle
            obj.reportID = -1;
            obj.ID = id;
            obj.multipleFrameNum = 0;
+           obj.WCMoveDistance = 0;
+           obj.firstWCStable = Pos(-1, -1);
+           obj.downReportPos = Pos(-1, -1);
        end
            
-       function addAreaID(obj, newID, areaVector)
+       function addAreaID(obj, newID, globalData)
+           areaVector = globalData.areas;
            obj.areaIDs = [obj.areaIDs, newID];
+           
+           
+           % 维护first reported ID
            if obj.firstReportedAreaID == -1 && areaVector.at(newID).reportID >= 0
                obj.firstReportedAreaID = newID;
                obj.reportID = areaVector.at(newID).reportID;
+               obj.downReportPos = areaVector.at(newID).reportPos;
                return;
            end
-           if obj.reportID > -1 &&  areaVector.at(newID).reportID > -1
-               assert(obj.reportID == areaVector.at(newID).reportID);
+           
+           % 维护firstWCStable
+           crtArea = areaVector.at(newID);
+           if crtArea.reportID >= 0 && crtArea.previousID > 0 && (obj.firstWCStable.x == -1 || obj.firstWCStable.y == -1)
+               lastArea = areaVector.at(crtArea.previousID);
+               if lastArea.reportID >= 0 % 连续两帧均有报点  可以查看N1和N2的情况来确定是否已经稳定
+                   [N1, N2] = Classifier.calFeatureN(lastArea, crtArea, globalData);
+                   if N1 > 0 && N2 < 0
+                       obj.firstWCStable = crtArea.weightedCenter;
+                   end
+               end
            end
            
+           %计算相关的数值
+           if obj.reportID > -1 &&  areaVector.at(newID).reportID > -1
+               assert(obj.reportID == areaVector.at(newID).reportID);
+               
+               if obj.firstWCStable.x ~= -1 && obj.firstWCStable.y ~= -1
+                   crtArea = areaVector.at(newID);
+                   lastArea = areaVector.at(crtArea.previousID);
+                   obj.WCMoveDistance = obj.WCMoveDistance +...
+                       crtArea.weightedCenter.disTo(lastArea.weightedCenter);
+                   crtArea.displacement_distance_ratio = (crtArea.weightedCenter.disTo(obj.firstWCStable)) /...
+                       obj.WCMoveDistance;
+                   if isnan(crtArea.displacement_distance_ratio)
+                       crtArea.displacement_distance_ratio = -1;
+                   end
+               end
+               
+           end
+           
+           % 维护lastReportedID
            if obj.firstReportedAreaID ~= -1 && obj.reportID >= 0 && areaVector.at(newID).reportID < 0 && obj.lastReportedAreaID == -1
                obj.lastReportedAreaID = obj.areaIDs(end - 1);
            end

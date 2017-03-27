@@ -21,6 +21,7 @@ classdef Area < handle
        previousID;% 下一个 Area 编号
        
        reportNum;
+       displacement_distance_ratio;
     end
     methods(Static)
         function ret = isConnected(area1, area2, frameVector, touchEventVector)
@@ -124,6 +125,7 @@ classdef Area < handle
             % 对于未找到“上家”的newAreas来说都需要新建一个事件
             % 对于未找到下家的lastAreas可以不作处理？    
             % NAIVE IMPLEMENT
+            globalData = GD(frameVector, touchEventVector, areaVector);
             ret = newAreaIds;
             newNum = length(newAreaIds);
             lastNum = length(lastAreaIds);
@@ -150,7 +152,7 @@ classdef Area < handle
                         end
                         
                         e = touchEventVector.at(crtLastArea.touchEventID);
-                        e.addAreaID(newAreaIds(newAreaIndex), areaVector);
+                        e.addAreaID(newAreaIds(newAreaIndex), globalData);
                         isNewEvent = false;
                         break;
                     end
@@ -159,7 +161,7 @@ classdef Area < handle
                     
                 if isNewEvent
                     newEvent = TouchEvent(touchEventVector.size() + 1);
-                    newEvent.addAreaID(newAreaIds(newAreaIndex), areaVector);
+                    newEvent.addAreaID(newAreaIds(newAreaIndex), globalData);
                     touchEventVector.push_back(newEvent);
                     crtNewArea.touchEventID = touchEventVector.size();
                 end
@@ -196,7 +198,7 @@ classdef Area < handle
             obj.weightedCenter = Pos(0, 0);
             obj.average = 0;
             theFrame = frameVector.at(obj.frameID);
-            
+            obj.displacement_distance_ratio = -1;
             maxCap = max(obj.rangeInfo(3, :));
             maxCapX = obj.rangeInfo(1, obj.rangeInfo(3, :) == maxCap);
             maxCapY = obj.rangeInfo(2, obj.rangeInfo(3, :) == maxCap);

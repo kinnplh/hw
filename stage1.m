@@ -1,4 +1,4 @@
-mainPaths = getfilepaths('dataTouchAndHold/');
+mainPaths = getfilepaths('edge/');
  for fileId = 1: length(mainPaths)
     tic
     frameVector = Vector('Frame');
@@ -78,7 +78,7 @@ mainPaths = getfilepaths('dataTouchAndHold/');
         frameVector.at(index).ID = index;
     end
         
-    savePath = sprintf('./frameVectors/frameVector%d_TouchAndHold.mat', fileId);
+    savePath = sprintf('./frameVectors/frameVector%d_edge.mat', fileId);
     save(savePath, 'frameVector');
     toc
 end
